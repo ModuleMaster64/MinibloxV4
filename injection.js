@@ -746,11 +746,11 @@ function modifyCode(text) {
 					let goDown = false;
 					tickLoop["Fly"] = function() {
 						ticks++;
-						if (keyPressedDump("Space")) {
+						if (keyPressedDump("space")) {
 							goUp = true;
 							goDown = false;
 						} else { goUp = false }
-						if (keyPressedDump("Shift")) {
+						if (keyPressedDump("shift")) {
 							goDown = true;
 							goUp = false;
 						} else { goDown = false }

@@ -742,8 +742,18 @@ function modifyCode(text) {
 			const fly = new Module("Fly", function(callback) {
 				if (callback) {
 					let ticks = 0;
+					let goUp = false;
+					let goDown = false;
 					tickLoop["Fly"] = function() {
 						ticks++;
+						if (keyPressedDump("Space")) {
+							goUp = true;
+							goDown = false;
+						} else { goUp = false }
+						if (keyPressedDump("Shift")) {
+							goDown = true;
+							goUp = false;
+						} else { goDown = false }
 						const dir = getMoveDirection(0.39);
 						player$1.motion.x = dir.x;
 						player$1.motion.z = dir.z;

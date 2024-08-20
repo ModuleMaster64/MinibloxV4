@@ -201,6 +201,11 @@ function modifyCode(text) {
 			}, 400);
 		}
 	`);
+	addReplacement('const _ = lodashExports.sample(MUSIC);',
+		`const vol = Options$1.sound.music.volume / BASE_VOLUME;
+		if (vol <= 0 && enabledModules["MusicFix"])
+			return; // don't play, we don't want to waste resources or bandwidth on this.
+		const _ = lodashExports.sample(MUSIC);`, true)
 	addReplacement('ClientSocket.on("CPacketMessage",$=>{', `
 		if (player$1 && $.text && !$.text.startsWith(player$1.name) && enabledModules["ChatDisabler"] && chatDelay < Date.now()) {
 			chatDelay = Date.now() + 1000;
@@ -776,6 +781,7 @@ function modifyCode(text) {
 			new Module("InvWalk", function() {});
 			new Module("KeepSprint", function() {});
 			new Module("NoSlowdown", function() {});
+			new Module("MusicFix", function() {});
 
 			// NoFall
 			new Module("NoFall", function(callback) {

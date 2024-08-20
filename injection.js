@@ -207,6 +207,9 @@ function modifyCode(text) {
 			return; // don't play, we don't want to waste resources or bandwidth on this.
 		const _ = lodashExports.sample(MUSIC);`, true)
 	addReplacement('ClientSocket.on("CPacketMessage",$=>{', `
+		if (enabledModules["AutoVote"] && $.text && $.text.toLowerCase().startsWith("poll started: choose a gamemode")) {
+			ClientSideCommands.tryExecuteClientside("vote 2", reactExports.useContext(GameContext))
+		}
 		if (player$1 && $.text && !$.text.startsWith(player$1.name) && enabledModules["ChatDisabler"] && chatDelay < Date.now()) {
 			chatDelay = Date.now() + 1000;
 			setTimeout(function() {
@@ -782,6 +785,7 @@ function modifyCode(text) {
 			new Module("KeepSprint", function() {});
 			new Module("NoSlowdown", function() {});
 			new Module("MusicFix", function() {});
+			new Module("AutoVote", function() {});
 
 			// NoFall
 			new Module("NoFall", function(callback) {

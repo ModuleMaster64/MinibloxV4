@@ -565,7 +565,9 @@ function modifyCode(text) {
 						// check if the player is falling and above a block
 						// player$1.fallDistance = 0;
 						const boundingBox = player$1.getEntityBoundingBox();
-						const block = rayTraceBlocks(boundingBox.min, boundingBox.min.sub(.5));
+						const clone = boundingBox.min.clone();
+						clone.y -= .5;
+						const block = rayTraceBlocks(boundingBox.min, clone);
 						if (block) {
 							sendY = player$1.pos.y + noFallExtraY[1];
 						}

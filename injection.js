@@ -569,6 +569,8 @@ function modifyCode(text) {
 							sendY = player$1.pos.y + noFallExtraY[1];
 						}
 					}
+				} else {
+					delete tickLoop["NoFall"];
 				}
 			});
 			noFallExtraY = NoFall.addoption("extraY", Number, .4);

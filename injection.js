@@ -770,19 +770,9 @@ function modifyCode(text) {
 			const fly = new Module("Fly", function(callback) {
 				if (callback) {
 					let ticks = 0;
-					let goUp = false;
-					let goDown = false;
 					tickLoop["Fly"] = function() {
 						ticks++;
-						if (keyPressedDump("space")) {
-							goUp = true;
-							goDown = false;
-						} else { goUp = false }
-						if (keyPressedDump("shift")) {
-							goDown = true;
-							goUp = false;
-						} else { goDown = false }
-						const dir = getMoveDirection(flySpeed[1]);
+						const dir = getMoveDirection(flyvalue[1]);
 						player$1.motion.x = dir.x;
 						player$1.motion.z = dir.z;
 						player$1.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);

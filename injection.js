@@ -782,7 +782,7 @@ function modifyCode(text) {
 							goDown = true;
 							goUp = false;
 						} else { goDown = false }
-						const dir = getMoveDirection(0.39);
+						const dir = getMoveDirection(flySpeed[1]);
 						player$1.motion.x = dir.x;
 						player$1.motion.z = dir.z;
 						player$1.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);

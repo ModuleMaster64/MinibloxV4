@@ -82,10 +82,11 @@ function modifyCode(text) {
 			document.dispatchEvent(DOMContentLoaded_event);
 		}, 0);
 	`);
-
+	addReplacement('y:this.getEntityBoundingBox().min.y,', 'y:sendY != false ? sendY : this.getEntityBoundingBox().min.y,', true);
 	addReplacement('Potions.jump.getId(),"5");', `
 		let blocking = false;
 		let sendYaw = false;
+		let sendY = false;
 		let breakStart = Date.now();
 		let noMove = Date.now();
 
@@ -557,6 +558,20 @@ function modifyCode(text) {
 			const velocity = new Module("Velocity", function() {});
 			velocityhori = velocity.addoption("Horizontal", Number, 0);
 			velocityvert = velocity.addoption("Vertical", Number, 0);
+			let noFallExtraY;
+			const NoFall = new Module("NoFall", function(callback) {
+				if (callback) {
+					tickLoop["NoFall"] = function() {
+						// check if the player is falling and above a block
+						this.fallDistance = 0;
+						const block = rayTraceBlock(player$1.boundingBox.min, player$1.boundingBox.min.sub(.5));
+						if (block) {
+							sendY = this.pos.y + noFallExtraY;
+						}
+					}
+				}
+			});
+			noFallExtraY = NoFall.addoption("extraY", Number, .4);
 
 			// WTap
 			new Module("WTap", function() {});

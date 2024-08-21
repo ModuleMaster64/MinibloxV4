@@ -790,6 +790,35 @@ function modifyCode(text) {
 			flyvalue = fly.addoption("Speed", Number, 2);
 			flyvert = fly.addoption("Vertical", Number, 0.7);
 
+			let jumpflyvalue, jumpflyvert;
+			// JumpFly
+			const jumpfly = new Module("JumpFly", function(callback) {
+				if (callback) {
+					let ticks = 0;
+					tickLoop["JumpFly"] = function() {
+						ticks++;
+						const dir = getMoveDirection(jumpflyvalue[1]);
+						player$1.motion.x = dir.x;
+						player$1.motion.z = dir.z;
+						const goUp = keyPressedDump("space");
+						const goDown = keyPressedDump("shift");
+						if (goUp || goDown) {
+							player$1.motion.y = goUp ? jumpflyvert[1] : -jumpflyvert[1];
+						}
+						player$1.motion.y = (ticks < 18 && ticks % 6 < 4 ? 4 : -0.27);
+					};
+				}
+				else {
+					delete tickLoop["JumpFly"];
+					if (player$1) {
+						player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
+						player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
+					}
+				}
+			});
+			jumpflyvalue = jumpfly.addoption("Speed", Number, 2);
+			jumpflyvert = jumpfly.addoption("Vertical", Number, 0.27);
+
 			new Module("InvWalk", function() {});
 			new Module("KeepSprint", function() {});
 			new Module("NoSlowdown", function() {});

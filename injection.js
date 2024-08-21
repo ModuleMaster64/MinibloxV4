@@ -566,7 +566,7 @@ function modifyCode(text) {
 						// player$1.fallDistance = 0;
 						const block = rayTraceBlocks(player$1.boundingBox.min, player$1.boundingBox.min.sub(.5));
 						if (block) {
-							sendY = player$1.pos.y + noFallExtraY;
+							sendY = player$1.pos.y + noFallExtraY[1];
 						}
 					}
 				}

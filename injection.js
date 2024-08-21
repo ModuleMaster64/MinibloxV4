@@ -567,7 +567,7 @@ function modifyCode(text) {
 						const boundingBox = player$1.getEntityBoundingBox();
 						const clone = boundingBox.min.clone();
 						clone.y -= .5;
-						const block = rayTraceBlocks(boundingBox.min, clone);
+						const block = rayTraceBlocks(boundingBox.min, clone, true, false, false, game$1.world);
 						if (block) {
 							sendY = player$1.pos.y + noFallExtraY[1];
 						}

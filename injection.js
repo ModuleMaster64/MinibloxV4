@@ -848,7 +848,7 @@ function modifyCode(text) {
 					tickLoop["Speed"] = function() {
 						lastjump++;
 						const oldMotion = new Vector3$1(player$1.motion.x, 0, player$1.motion.z);
-						const dir = getMoveDirection(0.39);
+						const dir = getMoveDirection(speedvalue[1]);
 						lastjump = player$1.onGround ? 0 : lastjump;
 						player$1.motion.x = dir.x;
 						player$1.motion.z = dir.z;
@@ -857,7 +857,7 @@ function modifyCode(text) {
 				}
 				else delete tickLoop["Speed"];
 			});
-			speedvalue = speed.addoption("Speed", Number, 0.9);
+			speedvalue = speed.addoption("Speed", Number, 0.39);
 			speedjump = speed.addoption("JumpHeight", Number, 0.42);
 			speedauto = speed.addoption("AutoJump", Boolean, true);
 

@@ -564,7 +564,7 @@ function modifyCode(text) {
 					tickLoop["NoFall"] = function() {
 						// check if the player is falling and above a block
 						// player$1.fallDistance = 0;
-						const block = rayTraceBlock(player$1.boundingBox.min, player$1.boundingBox.min.sub(.5));
+						const block = rayTraceBlocks(player$1.boundingBox.min, player$1.boundingBox.min.sub(.5));
 						if (block) {
 							sendY = this.pos.y + noFallExtraY;
 						}

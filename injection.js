@@ -774,7 +774,6 @@ function modifyCode(text) {
 					let goDown = false;
 					tickLoop["Fly"] = function() {
 						ticks++;
-						console.log("fly tick! goUp, goDown", goUp, goDown)
 						if (keyPressedDump("space")) {
 							goUp = true;
 							goDown = false;

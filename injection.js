@@ -804,8 +804,9 @@ function modifyCode(text) {
 						const goDown = keyPressedDump("shift");
 						if (goUp || goDown) {
 							player$1.motion.y = goUp ? jumpflyvert[1] : -jumpflyvert[1];
+						} else {
+							player$1.motion.y = (ticks < 18 && ticks % 6 < 4 ? 4 : -0.27);
 						}
-						player$1.motion.y = (ticks < 18 && ticks % 6 < 4 ? 4 : -0.27);
 					};
 				}
 				else {

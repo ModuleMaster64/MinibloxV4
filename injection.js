@@ -790,7 +790,7 @@ function modifyCode(text) {
 			flyvalue = fly.addoption("Speed", Number, 2);
 			flyvert = fly.addoption("Vertical", Number, 0.7);
 
-			let jumpflyvalue, jumpflyvert;
+			let jumpflyvalue, jumpflyvert, jumpFlyUpMotion, jumpFlyGlide;
 			// JumpFly
 			const jumpfly = new Module("JumpFly", function(callback) {
 				if (callback) {

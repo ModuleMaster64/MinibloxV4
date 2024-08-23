@@ -805,7 +805,7 @@ function modifyCode(text) {
 						if (goUp || goDown) {
 							player$1.motion.y = goUp ? jumpflyvert[1] : -jumpflyvert[1];
 						} else {
-							player$1.motion.y = (ticks < 18 && ticks % 6 < 4 ? 4 : -0.27);
+							player$1.motion.y = (ticks < 18 && ticks % 6 < 4 ? jumpFlyUpMotion[1] : jumpFlyGlide[1]);
 						}
 					};
 				}
@@ -818,6 +818,8 @@ function modifyCode(text) {
 				}
 			});
 			jumpflyvalue = jumpfly.addoption("Speed", Number, 2);
+			jumpFlyGlide = jumpfly.addoption("GlideValue", Number, -0.27);
+			jumpFlyUpMotion = jumpfly.addoption("UpMotion", Number, 4);
 			jumpflyvert = jumpfly.addoption("Vertical", Number, 0.27);
 
 			new Module("InvWalk", function() {});

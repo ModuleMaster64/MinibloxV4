@@ -550,6 +550,11 @@ function modifyCode(text) {
 					}
 				} else delete tickLoop["AutoClicker"];
 			});
+			new Module("AntiCheat", function(callback) {
+				if (!callback)
+					return; // TODO: deinitialization logic
+				// TODO: initialization logic
+			})
 
 			new Module("Sprint", function() {});
 			const velocity = new Module("Velocity", function() {});

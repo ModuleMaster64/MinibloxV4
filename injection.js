@@ -856,7 +856,7 @@ function modifyCode(text) {
 						lastjump = player$1.onGround ? 0 : lastjump;
 						player$1.motion.x = dir.x;
 						player$1.motion.z = dir.z;
-						player$1.motion.y = player$1.onGround && dir.length() > 0 && speedauto[1] ? speedjump[1] : player$1.motion.y;
+						player$1.motion.y = player$1.onGround && dir.length() > 0 && speedauto[1] && !keyPressedDump("space") ? speedjump[1] : player$1.motion.y;
 					};
 				}
 				else delete tickLoop["Speed"];

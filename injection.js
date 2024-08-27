@@ -1002,7 +1002,7 @@ function modifyCode(text) {
 				game$1.info.selectedSlot = slot;
 			}
 
-			let scaffoldtower, oldHeld;
+			let scaffoldtower, oldHeld, scaffoldextend;
 			const scaffold = new Module("Scaffold", function(callback) {
 				if (callback) {
 					if (player$1) oldHeld = game$1.info.selectedSlot;
@@ -1049,9 +1049,15 @@ function modifyCode(text) {
 							if (placeSide) {
 								const dir = placeSide.getOpposite().toVector();
 								const newDir = placeSide.toVector();
-								const placePosition = new BlockPos(pos.x + dir.x, pos.y + dir.y, pos.z + dir.z);
+								const placeX = pos.x + dir.x;
+								const placeZ = pos.z + dir.z;
+								// for (let extendX = 0; extendX < scaffoldextend[1]; extendX++) {
+								// 	console.info("ExtendX:", extendX);
+								// }
+								const placePosition = new BlockPos(placeX, keyPressedDump("shift") ? pos.y - (dir.y + 2) : pos.y + dir.y, placeZ);
 								const hitVec = new Vector3$1(placePosition.x + (newDir.x != 0 ? Math.max(newDir.x, 0) : Math.random()), placePosition.y + (newDir.y != 0 ? Math.max(newDir.y, 0) : Math.random()), placePosition.z + (newDir.z != 0 ? Math.max(newDir.z, 0) : Math.random()));
 								if (scaffoldtower[1] && keyPressedDump("space") && dir.y == -1 && player$1.motion.y < 0.2 && player$1.motion.y > 0.15) player$1.motion.y = 0.42;
+								if (keyPressedDump("shift") && dir.y == 1 && player$1.motion.y > -0.2 && player$1.motion.y < -0.15) player$1.motion.y = -0.42;
 								if (playerControllerDump.onPlayerRightClick(player$1, game$1.world, item, placePosition, placeSide, hitVec)) hud3D.swingArm();
 								if (item.stackSize == 0) {
 									player$1.inventory.main[player$1.inventory.currentItem] = null;
@@ -1067,6 +1073,7 @@ function modifyCode(text) {
 				}
 			});
 			scaffoldtower = scaffold.addoption("Tower", Boolean, true);
+			// scaffoldextend = scaffold.addoption("Extend", Number, 0);
 
 			function reloadTickLoop(value) {
 				if (game$1.tickLoop) {

@@ -11,17 +11,8 @@ function replaceAndCopyFunction(oldFunc, newFunc) {
 			newFunc(result);
 			return result;
 		},
-		// TODO: vector is very funny, now he is check for `prototype` on Object.getOwnPropertyNames and Object.getOwnPropertyDescriptors.
-		// how convenient that it's just those two that we hook?
-		get(orig, prop) {
-			if (prop == "prototype") return orig;
-			return new Proxy(orig, {
-				apply(orig, origIden, origArgs) {
-					const result = orig.apply(origIden, origArgs);
-					newFunc(result);
-					return result;
-				}
-			});
+		get(orig) {
+			return orig;
 		}
 	});
 }

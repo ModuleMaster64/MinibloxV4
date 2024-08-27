@@ -560,25 +560,6 @@ function modifyCode(text) {
 			const velocity = new Module("Velocity", function() {});
 			velocityhori = velocity.addoption("Horizontal", Number, 0);
 			velocityvert = velocity.addoption("Vertical", Number, 0);
-			let noFallExtraY;
-			const NoFall = new Module("NoFall", function(callback) {
-				if (callback) {
-					tickLoop["NoFall"] = function() {
-						// check if the player is falling and above a block
-						// player$1.fallDistance = 0;
-						const boundingBox = player$1.getEntityBoundingBox();
-						const clone = boundingBox.min.clone();
-						clone.y -= noFallExtraY[1];
-						const block = rayTraceBlocks(boundingBox.min, clone, true, false, false, game$1.world);
-						if (block) {
-							sendY = player$1.pos.y + noFallExtraY[1];
-						}
-					}
-				} else {
-					delete tickLoop["NoFall"];
-				}
-			});
-			noFallExtraY = NoFall.addoption("extraY", Number, .4);
 
 			// WTap
 			new Module("WTap", function() {});

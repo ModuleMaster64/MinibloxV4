@@ -553,7 +553,14 @@ function modifyCode(text) {
 			new Module("AntiCheat", function(callback) {
 				if (!callback)
 					return; // TODO: deinitialization logic
-				// TODO: initialization logic
+				const entities = game$1.world.entitiesDump;
+				for (const entity of entities) {
+						if (!entity instanceof EntityPlayer)
+							continue; // only go through players
+						if (entity.mode.isCreative() || entity.mode.isSpectator())
+							continue; // ignore Albert einstein or someone who died
+						// TODO: track the player's position and get the difference from previous position to new position.
+				}
 			})
 
 			new Module("Sprint", function() {});

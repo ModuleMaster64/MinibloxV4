@@ -839,21 +839,6 @@ function modifyCode(text) {
 			new Module("NoSlowdown", function() {});
 			new Module("MusicFix", function() {});
 
-			// NoFall
-			new Module("NoFall", function(callback) {
-				if (callback) {
-					let ticks = 0;
-					tickLoop["NoFall"] = function() {
-        				const ray = rayTraceBlocks(player$1.getEyePos(), player$1.getEyePos().clone().setY(0), false, false, false, game$1.world);
-						if (player$1.fallDistance > 2.5 && ray) {
-							ClientSocket.sendPacket(new SPacketPlayerPosLook({pos: {x: player$1.pos.x, y: ray.hitVec.y, z: player$1.pos.z}, onGround: true}));
-							player$1.fallDistance = 0;
-						}
-					};
-				}
-				else delete tickLoop["NoFall"];
-			});
-
 			// Speed
 			let speedvalue, speedjump, speedauto;
 			const speed = new Module("Speed", function(callback) {

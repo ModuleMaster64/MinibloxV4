@@ -468,8 +468,10 @@ const j = player$1.openContainer;`,
 				for(const [name, module] of Object.entries(modules)) chatString += "\\n" + name + " : " + (module.bind != "" ? module.bind : "none");
 				game$1.chat.addChat({text: chatString});
 				return;
-			case ".setoption": {
+			case ".setoption":
+			case ".reset" {
 				const module = args.length > 1 && getModule(args[1]);
+				const reset = args[0] == ".reset";
 				if (module) {
 					if (args.length < 3) {
 						chatString = module.name + " Options";
@@ -483,6 +485,13 @@ const j = player$1.openContainer;`,
 						if (name.toLocaleLowerCase() == args[2].toLocaleLowerCase()) option = value;
 					}
 					if (!option) return;
+					// the last value is the default value.
+					// ! don't change the default value (the last option), otherwise .reset won't work properly!
+					if (reset) {
+						option[1] = option[option.length - 1];
+						game$1.chat.addChat({text: "Reset " + module.name + " " + option[2] + " to " + option[1]});
+						return;
+					}
 					if (option[0] == Number) option[1] = !isNaN(Number.parseFloat(args[3])) ? Number.parseFloat(args[3]) : option[1];
 					else if (option[0] == Boolean) option[1] = args[3] == "true";
 					else if (option[0] == String) option[1] = args.slice(3).join(" ");
@@ -558,7 +567,9 @@ const j = player$1.openContainer;`,
 					};
 				}
 				addoption(name, typee, defaultt) {
-					this.options[name] = [typee, defaultt, name];
+					// ! the last item in the option array should never be changed.
+					// ! because it is used in the .reset command
+					this.options[name] = [typee, defaultt, name, defaultt];
 					return this.options[name];
 				}
 			}

@@ -409,6 +409,27 @@ function modifyCode(text) {
 
 	// SWING FIX
 	addReplacement('player$1.getActiveItemStack().item instanceof', 'null == ', true);
+	
+	// CONTAINER FIX (vector is very smart)
+	/**
+	 Description:
+	 In some cases, player$1.openChest may not be defined.
+	 In those cases, it will be undefined.
+	 ```js
+	 const j = player$1.openContainer,
+	 _ = j.getLowerChestInventory(),
+	 $ = j.getLowerChestInventory().getSizeInventory() > 27,
+	 et = $ ? 27 : 0;
+	 ```
+	 and because `_` is invoking a function in `j`,
+	 it'll throw an error and break all of the UI.
+	 */
+	addReplacement(
+		'const j = player$1.openContainer',
+		`if (!player$1.openContainer) return;
+const j = player$1.openContainer;`,
+		true
+	);
 
 	// COMMANDS
 	addReplacement('tryExecuteClientside(et,_))return;', `

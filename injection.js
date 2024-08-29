@@ -588,7 +588,7 @@ function modifyCode(text) {
 					delete tickLoop["NoFall"];
 				}
 			});
-			noFallExtraY = NoFall.addoption("extraY", Number, .4);
+			noFallExtraY = NoFall.addoption("extraY", Number, .41);
 
 			// WTap
 			new Module("WTap", function() {});

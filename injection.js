@@ -216,7 +216,7 @@ function modifyCode(text) {
 	// in EntityManager, renderEntities function
 	addReplacement('h.render()})', '; for(const [index, func] of Object.entries(renderTickLoop)) if (func) func();');
 	addReplacement('updateNameTag(){let h="white",p=1;', 'this.entity.team = this.entity.profile.cosmetics.color;');
-	addReplacement('connect(_,$=!1,et=!1){', 'lastJoined = _;');
+	addReplacement('connect(u,h=!1,p=!1){', 'lastJoined = u;');
 	addReplacement('SliderOption("Render Distance ",2,8,3)', 'SliderOption("Render Distance ",2,64,3)', true);
 	addReplacement('ClientSocket.on("CPacketDisconnect",h=>{', `
 		if (enabledModules["AutoRejoin"]) {

@@ -37,6 +37,10 @@ function addDump(replacement, code) {
 	dumpedVarNames[replacement] = code;
 }
 
+/**
+ * 
+ * @param {string} text 
+ */
 function modifyCode(text) {
 	for(const [name, regex] of Object.entries(dumpedVarNames)) {
 		const matched = text.match(regex);
@@ -50,7 +54,7 @@ function modifyCode(text) {
 	const unmatchedDumps = Object.entries(dumpedVarNames).filter(e => !text.match(e[1]));
 	if (unmatchedDumps.length > 0) console.warn("Unmatched dumps:", unmatchedDumps);
 
-	const unmatchedReplacements = Object.entries(replacements).filter(e => !text.match(e[0]));
+	const unmatchedReplacements = Object.entries(replacements).filter(r => text.replace(r[0]) === text);
 	if (unmatchedReplacements.length > 0) console.warn("Unmatched replacements:", unmatchedReplacements);
 
 	for(const [replacement, code] of Object.entries(replacements)) {
@@ -433,13 +437,12 @@ function modifyCode(text) {
 	 h = m.getLowerChestInventory().getSizeInventory() > 27,
 	 p = h ? 27 : 0;
 	 ```
-	 and because `_` is invoking a function in `j`,
+	 and because `u` is invoking a function in `m`,
 	 it'll throw an error and break all of the UI.
 	 */
 	addReplacement(
 		'const m=player.openContainer',
-		`if (!player.openContainer) return;
-const m = player.openContainer,`,
+		`const m = player.openContainer ?? { getLowerChestInventory: () => {getSizeInventory: () => 0} }`,
 		true
 	);
 

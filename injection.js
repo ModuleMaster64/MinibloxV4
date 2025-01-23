@@ -435,14 +435,14 @@ const j = player.openContainer;`,
 
 	// COMMANDS
 	addReplacement('submit(u){', `
-		const str = u.toLocaleLowerCase();
+		const str = this.inputValue.toLocaleLowerCase();
 		const args = str.split(" ");
 		let chatString;
 		switch (args[0]) {
 			case ".bind": {
 				const module = args.length > 2 && getModule(args[1]);
 				if (module) module.setbind(args[2] == "none" ? "" : args[2], true);
-				return;
+				return this.closeInput();
 			}
 			case ".t":
 			case ".toggle":
@@ -459,17 +459,17 @@ const j = player.openContainer;`,
 						for(const [name, module] of Object.entries(modules)) module.toggle();
 					}
 				}
-				return;
+				return this.closeInput();
 			case ".modules":
 				chatString = "Module List\\n";
 				for(const [name, module] of Object.entries(modules)) chatString += "\\n" + name;
 				game$1.chat.addChat({text: chatString});
-				return;
+				return this.closeInput();
 			case ".binds":
 				chatString = "Bind List\\n";
 				for(const [name, module] of Object.entries(modules)) chatString += "\\n" + name + " : " + (module.bind != "" ? module.bind : "none");
 				game$1.chat.addChat({text: chatString});
-				return;
+				return this.closeInput();
 			case ".setoption":
 			case ".reset": {
 				const module = args.length > 1 && getModule(args[1]);
@@ -479,7 +479,7 @@ const j = player.openContainer;`,
 						chatString = module.name + " Options";
 						for(const [name, value] of Object.entries(module.options)) chatString += "\\n" + name + " : " + value[0].name + " : " + value[1];
 						game$1.chat.addChat({text: chatString});
-						return;
+						return this.closeInput();
 					}
 
 					let option;
@@ -492,14 +492,14 @@ const j = player.openContainer;`,
 					if (reset) {
 						option[1] = option[option.length - 1];
 						game$1.chat.addChat({text: "Reset " + module.name + " " + option[2] + " to " + option[1]});
-						return;
+						return this.closeInput();
 					}
 					if (option[0] == Number) option[1] = !isNaN(Number.parseFloat(args[3])) ? Number.parseFloat(args[3]) : option[1];
 					else if (option[0] == Boolean) option[1] = args[3] == "true";
 					else if (option[0] == String) option[1] = args.slice(3).join(" ");
 					game$1.chat.addChat({text: "Set " + module.name + " " + option[2] + " to " + option[1]});
 				}
-				return;
+				return this.closeInput();
 			}
 			case ".config":
 			case ".profile":
@@ -524,13 +524,13 @@ const j = player.openContainer;`,
 							break;
 					}
 				}
-				return;
+				return this.closeInput();
 		}
 		if (enabledModules["FilterBypass"] && !$.startsWith('/')) {
 			const words = $.split(" ");
 			let newwords = [];
 			for(const word of words) newwords.push(word.charAt(0) + '‎' + word.slice(1));
-			$ = newwords.join(' ');
+			this.inputValue = newwords.join(' ');
 		}
 	`);
 

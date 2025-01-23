@@ -47,7 +47,9 @@ function modifyCode(text) {
 	}
 
 	for(const [replacement, code] of Object.entries(replacements)){
-		text = text.replaceAll(replacement, code[1] ? code[0] : replacement + code[0]);
+		text = text.replace(replacement, code[1] ? code[0] : replacement + code[0]);
+		// TODO: handle the 2nd occurrence, which inside a string in a varible called "jsContent".
+		// (screw you vector)
 	}
 
 	var newScript = document.createElement("script");

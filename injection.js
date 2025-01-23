@@ -367,8 +367,8 @@ function modifyCode(text) {
 	`);
 
 	// SKIN
-	addReplacement('ClientSocket.on("CPacketSpawnPlayer",$=>{const et=j.world.getPlayerById($.id);', `
-		if ($.socketId === player.socketId && enabledModules["AntiBan"]) {
+	addReplacement('ClientSocket.on("CPacketSpawnPlayer",h=>{const p=m.world.getPlayerById(h.id);', `
+		if (h.socketId === player.socketId && enabledModules["AntiBan"]) {
 			hud3D.remove(hud3D.rightArm);
 			hud3D.rightArm = undefined;
 			player.profile.cosmetics.skin = "GrandDad";

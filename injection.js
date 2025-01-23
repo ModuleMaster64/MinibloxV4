@@ -119,7 +119,8 @@ function modifyCode(text) {
 		for (j = 0; j < 10; j++) keybindList[48 + j] = keybindList["Digit" + j] = "" + j;
 		window.addEventListener("keydown", function(key) {
 			const func = keybindCallbacks[keybindList[key.code]];
-			call$1(func, key);
+			func(key);
+			// call$1(func, key);
 		});
 	`);
 
@@ -141,9 +142,9 @@ function modifyCode(text) {
 	`, true);
 
 	// TELEPORT FIX
-	addReplacement('player$1.setPositionAndRotation($.x,$.y,$.z,$.yaw,$.pitch),', `
+	addReplacement('player.setPositionAndRotation($.x,$.y,$.z,$.yaw,$.pitch),', `
 		noMove = Date.now() + 500;
-		player$1.setPositionAndRotation($.x,$.y,$.z,$.yaw,$.pitch),
+		player.setPositionAndRotation($.x,$.y,$.z,$.yaw,$.pitch),
 	`, true);
 
 	addReplacement('COLOR_TOOLTIP_BG,BORDER_SIZE)}', `
@@ -191,7 +192,7 @@ function modifyCode(text) {
 
 	// HOOKS
 	addReplacement('+=$*rt+_*nt}', `
-		if (this == player$1) {
+		if (this == player) {
 			for(const [index, func] of Object.entries(tickLoop)) if (func) func();
 		}
 	`);
@@ -213,7 +214,7 @@ function modifyCode(text) {
 			return; // don't play, we don't want to waste resources or bandwidth on this.
 		const _ = lodashExports.sample(MUSIC);`, true)
 	addReplacement('ClientSocket.on("CPacketMessage",$=>{', `
-		if (player$1 && $.text && !$.text.startsWith(player$1.name) && enabledModules["ChatDisabler"] && chatDelay < Date.now()) {
+		if (player && $.text && !$.text.startsWith(player.name) && enabledModules["ChatDisabler"] && chatDelay < Date.now()) {
 			chatDelay = Date.now() + 1000;
 			setTimeout(function() {
 				ClientSocket.sendPacket(new SPacketMessage({text: Math.random() + ("\\n" + chatdisablermsg[1]).repeat(20)}));
@@ -250,7 +251,7 @@ function modifyCode(text) {
 
 	// VELOCITY
 	addReplacement('"CPacketEntityVelocity",$=>{const et=j.world.entitiesDump.get($.id);', `
-		if (player$1 && $.id == player$1.id && enabledModules["Velocity"]) {
+		if (player && $.id == player.id && enabledModules["Velocity"]) {
 			if (velocityhori[1] == 0 && velocityvert[1] == 0) return;
 			$.motion = new Vector3$1($.motion.x * velocityhori[1], $.motion.y * velocityvert[1], $.motion.z * velocityhori[1]);
 		}
@@ -266,7 +267,7 @@ function modifyCode(text) {
 	addReplacement('tt>0&&($.addVelocity(-Math.sin(this.yaw)*tt*.5,.1,-Math.cos(this.yaw)*tt*.5),this.motion.x*=.6,this.motion.z*=.6,this.setSprinting(!1)),', `
 		if (tt > 0) {
 			$.addVelocity(-Math.sin(this.yaw) * tt * .5, .1, -Math.cos(this.yaw) * tt * .5);
-			if (this != player$1 || !enabledModules["KeepSprint"]) {
+			if (this != player || !enabledModules["KeepSprint"]) {
 				this.motion.x *= .6;
 				this.motion.z *= .6;
 				this.setSprinting(!1);
@@ -275,20 +276,17 @@ function modifyCode(text) {
 	`, true);
 
 	// KILLAURA
-	addReplacement('else player$1.isBlocking()?', 'else (player$1.isBlocking() || blocking)?', true);
-	addReplacement('this.entity.isBlocking()', '(this.entity.isBlocking() || this.entity == player$1 && blocking)', true);
-	addReplacement('const nt={onGround:this.onGround}', `, realYaw = sendYaw || this.yaw`);
+	addReplacement('else player.isBlocking()?', 'else (player.isBlocking() || blocking)?', true);
+	addReplacement('this.entity.isBlocking()', '(this.entity.isBlocking() || this.entity == player && blocking)', true);
+	addReplacement(/const [a-zA-z]+={onGround:this.onGround}/gm, `, realYaw = sendYaw || this.yaw`);
 	addReplacement('this.yaw-this.', 'realYaw-this.', true);
-	addReplacement('nt.yaw=player.yaw', 'nt.yaw=realYaw', true);
+	addReplacement(/[a-zA-z]+.yaw=player.yaw/, 'nt.yaw=realYaw', true);
 	addReplacement('this.lastReportedYawDump=this.yaw,', 'this.lastReportedYawDump=realYaw,', true);
 	addReplacement('this.neck.rotation.y=controls$1.yaw', 'this.neck.rotation.y=(sendYaw||controls$1.yaw)', true);
 
 	// NOSLOWDOWN
-	addReplacement('const $=this.jumping,et=this.sneak,tt=-.8,rt=this.moveForwardDump<=tt;', `
-		const slowdownCheck = this.isUsingItem() && !enabledModules["NoSlowdown"];
-	`);
-	addReplacement('updatePlayerMoveState(),this.isUsingItem()', 'updatePlayerMoveState(),slowdownCheck', true);
-	addReplacement('it&&!this.isUsingItem()', 'it&&!slowdownCheck', true);
+	addReplacement('updatePlayerMoveState(),this.isUsingItem()', 'updatePlayerMoveState(),(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
+	addReplacement('it&&!this.isUsingItem()', 'it&&!(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
 	addReplacement('0),this.sneak', ' && !enabledModules["NoSlowdown"]');
 
 	// STEP
@@ -296,11 +294,11 @@ function modifyCode(text) {
 
 	// WTAP
 	addReplacement('this.dead||this.getHealth()<=0)return;', `
-		if (enabledModules["WTap"]) player$1.serverSprintState = false;
+		if (enabledModules["WTap"]) player.serverSprintState = false;
 	`);
 
 	// FASTBREAK
-	addReplacement('_&&player$1.mode.isCreative()', `||enabledModules["FastBreak"]`);
+	addReplacement('_&&player.mode.isCreative()', `||enabledModules["FastBreak"]`);
 
 	// INVWALK
 	addReplacement('keyPressed(j)&&Game.isActive(!1)', 'keyPressed(j)&&(Game.isActive(!1)||enabledModules["InvWalk"]&&!game.chat.showInput)', true);
@@ -326,7 +324,7 @@ function modifyCode(text) {
 
 	// CHAMS
 	addReplacement(')&&(et.mesh.visible=this.shouldRenderEntity(et))', `
-		if (enabledModules["Chams"] && et && et.id != player$1.id) {
+		if (enabledModules["Chams"] && et && et.id != player.id) {
 			for(const mesh in et.mesh.meshes) {
 				et.mesh.meshes[mesh].material.depthTest = false;
 				et.mesh.meshes[mesh].renderOrder = 3;
@@ -354,10 +352,10 @@ function modifyCode(text) {
 
 	// SKIN
 	addReplacement('ClientSocket.on("CPacketSpawnPlayer",$=>{const et=j.world.getPlayerById($.id);', `
-		if ($.socketId === player$1.socketId && enabledModules["AntiBan"]) {
+		if ($.socketId === player.socketId && enabledModules["AntiBan"]) {
 			hud3D.remove(hud3D.rightArm);
 			hud3D.rightArm = undefined;
-			player$1.profile.cosmetics.skin = "GrandDad";
+			player.profile.cosmetics.skin = "GrandDad";
 			$.cosmetics.skin = "GrandDad";
 			$.cosmetics.cape = "GrandDad";
 		}
@@ -410,15 +408,15 @@ function modifyCode(text) {
 	addReplacement('Object.assign(keyMap,_)', '; keyMap["Semicolon"] = "semicolon"; keyMap["Apostrophe"] = "apostrophe";');
 
 	// SWING FIX
-	addReplacement('player$1.getActiveItemStack().item instanceof', 'null == ', true);
+	addReplacement('player.getActiveItemStack().item instanceof', 'null == ', true);
 	
 	// CONTAINER FIX (vector is very smart)
 	/**
 	 Description:
-	 In some cases, player$1.openChest may not be defined.
+	 In some cases, player.openChest may not be defined.
 	 In those cases, it will be undefined.
 	 ```js
-	 const j = player$1.openContainer,
+	 const j = player.openContainer,
 	 _ = j.getLowerChestInventory(),
 	 $ = j.getLowerChestInventory().getSizeInventory() > 27,
 	 et = $ ? 27 : 0;
@@ -427,9 +425,9 @@ function modifyCode(text) {
 	 it'll throw an error and break all of the UI.
 	 */
 	addReplacement(
-		'const j = player$1.openContainer',
-		`if (!player$1.openContainer) return;
-const j = player$1.openContainer;`,
+		'const j = player.openContainer',
+		`if (!player.openContainer) return;
+const j = player.openContainer;`,
 		true
 	);
 
@@ -580,7 +578,7 @@ const j = player$1.openContainer;`,
 			new Module("AutoClicker", function(callback) {
 				if (callback) {
 					tickLoop["AutoClicker"] = function() {
-						if (clickDelay < Date.now() && playerControllerDump.key.leftClick && !player$1.isUsingItem()) {
+						if (clickDelay < Date.now() && playerControllerDump.key.leftClick && !player.isUsingItem()) {
 							playerControllerDump.leftClick();
 							clickDelay = Date.now() + 60;
 						}
@@ -609,13 +607,13 @@ const j = player$1.openContainer;`,
 				if (callback) {
 					tickLoop["NoFall"] = function() {
 						// check if the player is falling and above a block
-						// player$1.fallDistance = 0;
-						const boundingBox = player$1.getEntityBoundingBox();
+						// player.fallDistance = 0;
+						const boundingBox = player.getEntityBoundingBox();
 						const clone = boundingBox.min.clone();
 						clone.y -= noFallExtraY[1];
 						const block = rayTraceBlocks(boundingBox.min, clone, true, false, false, game$1.world);
 						if (block) {
-							sendY = player$1.pos.y + noFallExtraY[1];
+							sendY = player.pos.y + noFallExtraY[1];
 						}
 					}
 				} else {
@@ -632,9 +630,9 @@ const j = player$1.openContainer;`,
 				if (callback) {
 					let ticks = 0;
 					tickLoop["AntiFall"] = function() {
-        				const ray = rayTraceBlocks(player$1.getEyePos(), player$1.getEyePos().clone().setY(0), false, false, false, game$1.world);
-						if (player$1.fallDistance > 2.8 && !ray) {
-							player$1.motion.y = 0;
+        				const ray = rayTraceBlocks(player.getEyePos(), player.getEyePos().clone().setY(0), false, false, false, game$1.world);
+						if (player.fallDistance > 2.8 && !ray) {
+							player.motion.y = 0;
 						}
 					};
 				}
@@ -659,10 +657,10 @@ const j = player$1.openContainer;`,
 
 			function killauraAttack(entity, first) {
 				if (attackDelay < Date.now()) {
-					const aimPos = player$1.pos.clone().sub(entity.pos);
-					const newYaw = wrapAngleTo180_radians(Math.atan2(aimPos.x, aimPos.z) - player$1.lastReportedYawDump);
-					const checkYaw = wrapAngleTo180_radians(Math.atan2(aimPos.x, aimPos.z) - player$1.yaw);
-					if (first) sendYaw = Math.abs(checkYaw) > degToRad(30) && Math.abs(checkYaw) < degToRad(killauraangle[1]) ? player$1.lastReportedYawDump + newYaw : false;
+					const aimPos = player.pos.clone().sub(entity.pos);
+					const newYaw = wrapAngleTo180_radians(Math.atan2(aimPos.x, aimPos.z) - player.lastReportedYawDump);
+					const checkYaw = wrapAngleTo180_radians(Math.atan2(aimPos.x, aimPos.z) - player.yaw);
+					if (first) sendYaw = Math.abs(checkYaw) > degToRad(30) && Math.abs(checkYaw) < degToRad(killauraangle[1]) ? player.lastReportedYawDump + newYaw : false;
 					if (Math.abs(newYaw) < degToRad(30)) {
 						if ((attackedPlayers[entity.id] || 0) < Date.now()) attackedPlayers[entity.id] = Date.now() + 100;
 						if (!didSwing) {
@@ -671,7 +669,7 @@ const j = player$1.openContainer;`,
 							didSwing = true;
 						}
 						const box = entity.getEntityBoundingBox();
-						const hitVec = player$1.getEyePos().clone().clamp(box.min, box.max);
+						const hitVec = player.getEyePos().clone().clamp(box.min, box.max);
 						attacked++;
 						playerControllerMP.syncItemDump();
 						ClientSocket.sendPacket(new SPacketUseEntity({
@@ -683,13 +681,13 @@ const j = player$1.openContainer;`,
 								z: hitVec.z
 							})
 						}));
-						player$1.attackDump(entity);
+						player.attackDump(entity);
 					}
 				}
 			}
 
 			function swordCheck() {
-				const item = player$1.inventory.getCurrentItem();
+				const item = player.inventory.getCurrentItem();
 				return item && item.getItem() instanceof ItemSword;
 			}
 
@@ -738,18 +736,18 @@ const j = player$1.openContainer;`,
 						attacked = 0;
 						didSwing = false;
 						const localPos = controls.position.clone();
-						const localTeam = getTeam(player$1);
+						const localTeam = getTeam(player);
 						const entities = game$1.world.entitiesDump;
 
 						attackList = [];
 						if (!killauraitem[1] || swordCheck()) {
 							for (const entity of entities.values()) {
-								if (entity.id == player$1.id) continue;
-								const newDist = player$1.getDistanceSqToEntity(entity);
+								if (entity.id == player.id) continue;
+								const newDist = player.getDistanceSqToEntity(entity);
 								if (newDist < (killaurarange[1] * killaurarange[1]) && entity instanceof EntityPlayer) {
 									if (entity.mode.isSpectator() || entity.mode.isCreative() || entity.isInvisibleDump()) continue;
 									if (localTeam && localTeam == getTeam(entity)) continue;
-									if (killaurawall[1] && !player$1.canEntityBeSeen(entity)) continue;
+									if (killaurawall[1] && !player.canEntityBeSeen(entity)) continue;
 									attackList.push(entity);
 								}
 							}
@@ -799,13 +797,13 @@ const j = player$1.openContainer;`,
 			new Module("FastBreak", function() {});
 
 			function getMoveDirection(moveSpeed) {
-				let moveStrafe = player$1.moveStrafeDump;
-				let moveForward = player$1.moveForwardDump;
+				let moveStrafe = player.moveStrafeDump;
+				let moveForward = player.moveForwardDump;
 				let speed = moveStrafe * moveStrafe + moveForward * moveForward;
 				if (speed >= 1e-4) {
 					speed = Math.sqrt(speed), speed < 1 && (speed = 1), speed = 1 / speed, moveStrafe = moveStrafe * speed, moveForward = moveForward * speed;
-					const rt = Math.cos(player$1.yaw) * moveSpeed;
-					const nt = -Math.sin(player$1.yaw) * moveSpeed;
+					const rt = Math.cos(player.yaw) * moveSpeed;
+					const nt = -Math.sin(player.yaw) * moveSpeed;
 					return new Vector3$1(moveStrafe * rt - moveForward * nt, 0, moveForward * rt + moveStrafe * nt);
 				}
 				return new Vector3$1(0, 0, 0);
@@ -819,16 +817,16 @@ const j = player$1.openContainer;`,
 					tickLoop["Fly"] = function() {
 						ticks++;
 						const dir = getMoveDirection(flyvalue[1]);
-						player$1.motion.x = dir.x;
-						player$1.motion.z = dir.z;
-						player$1.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);
+						player.motion.x = dir.x;
+						player.motion.z = dir.z;
+						player.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);
 					};
 				}
 				else {
 					delete tickLoop["Fly"];
-					if (player$1) {
-						player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
-						player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
+					if (player) {
+						player.motion.x = Math.max(Math.min(player.motion.x, 0.3), -0.3);
+						player.motion.z = Math.max(Math.min(player.motion.z, 0.3), -0.3);
 					}
 				}
 			});
@@ -844,22 +842,22 @@ const j = player$1.openContainer;`,
 					tickLoop["JumpFly"] = function() {
 						ticks++;
 						const dir = getMoveDirection(jumpflyvalue[1]);
-						player$1.motion.x = dir.x;
-						player$1.motion.z = dir.z;
+						player.motion.x = dir.x;
+						player.motion.z = dir.z;
 						const goUp = keyPressedDump("space");
 						const goDown = keyPressedDump("shift");
 						if (goUp || goDown) {
-							player$1.motion.y = goUp ? jumpflyvert[1] : -jumpflyvert[1];
+							player.motion.y = goUp ? jumpflyvert[1] : -jumpflyvert[1];
 						} else {
-							player$1.motion.y = (ticks < 18 && ticks % 6 < 4 ? jumpFlyUpMotion[1] : jumpFlyGlide[1]);
+							player.motion.y = (ticks < 18 && ticks % 6 < 4 ? jumpFlyUpMotion[1] : jumpFlyGlide[1]);
 						}
 					};
 				}
 				else {
 					delete tickLoop["JumpFly"];
-					if (player$1) {
-						player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
-						player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
+					if (player) {
+						player.motion.x = Math.max(Math.min(player.motion.x, 0.3), -0.3);
+						player.motion.z = Math.max(Math.min(player.motion.z, 0.3), -0.3);
 					}
 				}
 			});
@@ -880,12 +878,12 @@ const j = player$1.openContainer;`,
 					let lastjump = 10;
 					tickLoop["Speed"] = function() {
 						lastjump++;
-						const oldMotion = new Vector3$1(player$1.motion.x, 0, player$1.motion.z);
+						const oldMotion = new Vector3$1(player.motion.x, 0, player.motion.z);
 						const dir = getMoveDirection(speedvalue[1]);
-						lastjump = player$1.onGround ? 0 : lastjump;
-						player$1.motion.x = dir.x;
-						player$1.motion.z = dir.z;
-						player$1.motion.y = player$1.onGround && dir.length() > 0 && speedauto[1] && !keyPressedDump("space") ? speedjump[1] : player$1.motion.y;
+						lastjump = player.onGround ? 0 : lastjump;
+						player.motion.x = dir.x;
+						player.motion.z = dir.z;
+						player.motion.y = player.onGround && dir.length() > 0 && speedauto[1] && !keyPressedDump("space") ? speedjump[1] : player.motion.y;
 					};
 				}
 				else delete tickLoop["Speed"];
@@ -913,7 +911,7 @@ const j = player$1.openContainer;`,
 					tickLoop["Breaker"] = function() {
 						if (breakStart > Date.now()) return;
 						let offset = breakerrange[1];
-						for (const block of BlockPos.getAllInBoxMutable(new BlockPos(player$1.pos.x - offset, player$1.pos.y - offset, player$1.pos.z - offset), new BlockPos(player$1.pos.x + offset, player$1.pos.y + offset, player$1.pos.z + offset))) {
+						for (const block of BlockPos.getAllInBoxMutable(new BlockPos(player.pos.x - offset, player.pos.y - offset, player.pos.z - offset), new BlockPos(player.pos.x + offset, player.pos.y + offset, player.pos.z + offset))) {
 							if (game$1.world.getBlockState(block).getBlock() instanceof BlockDragonEgg) {
 								if ((attemptDelay[block] || 0) > Date.now()) continue;
 								attemptDelay[block] = Date.now() + 500;
@@ -973,16 +971,16 @@ const j = player$1.openContainer;`,
 			new Module("AutoArmor", function(callback) {
 				if (callback) {
 					tickLoop["AutoArmor"] = function() {
-						if (player$1.openContainer == player$1.inventoryContainer) {
+						if (player.openContainer == player.inventoryContainer) {
 							for(let i = 0; i < 4; i++) {
-								const slots = player$1.inventoryContainer.inventorySlots;
+								const slots = player.inventoryContainer.inventorySlots;
 								const slot = getArmorSlot(i, slots);
 								if (slot != i) {
 									if (slots[i].getHasStack()) {
-										playerControllerDump.windowClickDump(player$1.openContainer.windowId, i, 0, 0, player$1);
-										playerControllerDump.windowClickDump(player$1.openContainer.windowId, -999, 0, 0, player$1);
+										playerControllerDump.windowClickDump(player.openContainer.windowId, i, 0, 0, player);
+										playerControllerDump.windowClickDump(player.openContainer.windowId, -999, 0, 0, player);
 									}
-									playerControllerDump.windowClickDump(player$1.openContainer.windowId, slot, 0, 1, player$1);
+									playerControllerDump.windowClickDump(player.openContainer.windowId, slot, 0, 1, player);
 								}
 							}
 						}
@@ -992,15 +990,15 @@ const j = player$1.openContainer;`,
 			});
 
 			function craftRecipe(recipe) {
-				if (canCraftItem(player$1.inventory, recipe)) {
-					craftItem(player$1.inventory, recipe, false);
+				if (canCraftItem(player.inventory, recipe)) {
+					craftItem(player.inventory, recipe, false);
 					ClientSocket.sendPacket(new SPacketCraftItem({
 						data: JSON.stringify({
 							recipe: recipe,
 							shiftDown: false
 						})
 					}));
-					playerControllerDump.windowClickDump(player$1.openContainer.windowId, 36, 0, 0, player$1);
+					playerControllerDump.windowClickDump(player.openContainer.windowId, 36, 0, 0, player);
 				}
 			}
 
@@ -1008,9 +1006,9 @@ const j = player$1.openContainer;`,
 			new Module("AutoCraft", function(callback) {
 				if (callback) {
 					tickLoop["AutoCraft"] = function() {
-						if (checkDelay < Date.now() && player$1.openContainer == player$1.inventoryContainer) {
+						if (checkDelay < Date.now() && player.openContainer == player.inventoryContainer) {
 							checkDelay = Date.now() + 300;
-							if (!player$1.inventory.hasItem(Items.emerald_sword)) craftRecipe(recipes[1101][0]);
+							if (!player.inventory.hasItem(Items.emerald_sword)) craftRecipe(recipes[1101][0]);
 						}
 					}
 				}
@@ -1021,12 +1019,12 @@ const j = player$1.openContainer;`,
 			const cheststeal = new Module("ChestSteal", function(callback) {
 				if (callback) {
 					tickLoop["ChestSteal"] = function() {
-						if (player$1.openContainer && player$1.openContainer instanceof ContainerChest) {
-							for(let i = 0; i < player$1.openContainer.numRows * 9; i++) {
-								const slot = player$1.openContainer.inventorySlots[i];
+						if (player.openContainer && player.openContainer instanceof ContainerChest) {
+							for(let i = 0; i < player.openContainer.numRows * 9; i++) {
+								const slot = player.openContainer.inventorySlots[i];
 								const item = slot.getHasStack() ? slot.getStack().getItem() : null;
 								if (item && (item instanceof ItemSword || item instanceof ItemArmor || item instanceof ItemAppleGold || cheststealblocks[1] && item instanceof ItemBlock || cheststealtools[1] && item instanceof ItemTool)) {
-									playerControllerDump.windowClickDump(player$1.openContainer.windowId, i, 0, 1, player$1);
+									playerControllerDump.windowClickDump(player.openContainer.windowId, i, 0, 1, player);
 								}
 							}
 						}
@@ -1046,27 +1044,27 @@ const j = player$1.openContainer;`,
 			}
 
 			function switchSlot(slot) {
-				player$1.inventory.currentItem = slot;
+				player.inventory.currentItem = slot;
 				game$1.info.selectedSlot = slot;
 			}
 
 			let scaffoldtower, oldHeld, scaffoldextend;
 			const scaffold = new Module("Scaffold", function(callback) {
 				if (callback) {
-					if (player$1) oldHeld = game$1.info.selectedSlot;
+					if (player) oldHeld = game$1.info.selectedSlot;
 					tickLoop["Scaffold"] = function() {
 						for(let i = 0; i < 9; i++) {
-							const item = player$1.inventory.main[i];
+							const item = player.inventory.main[i];
 							if (item && item.item instanceof ItemBlock && item.item.block.getBoundingBox().max.y == 1 && item.item.name != "tnt") {
 								switchSlot(i);
 								break;
 							}
 						}
 
-						const item = player$1.inventory.getCurrentItem();
+						const item = player.inventory.getCurrentItem();
 						if (item && item.getItem() instanceof ItemBlock) {
 							let placeSide;
-							let pos = new BlockPos(player$1.pos.x, player$1.pos.y - 1, player$1.pos.z);
+							let pos = new BlockPos(player.pos.x, player.pos.y - 1, player.pos.z);
 							if (game$1.world.getBlockState(pos).getBlock().material == Materials.air) {
 								placeSide = getPossibleSides(pos);
 								if (!placeSide) {
@@ -1077,7 +1075,7 @@ const j = player$1.openContainer;`,
 											const newPos = new BlockPos(pos.x + x, pos.y, pos.z + z);
 											const checkNearby = getPossibleSides(newPos);
 											if (checkNearby) {
-												const newDist = player$1.pos.distanceTo(new Vector3$1(newPos.x, newPos.y, newPos.z));
+												const newDist = player.pos.distanceTo(new Vector3$1(newPos.x, newPos.y, newPos.z));
 												if (newDist <= closest) {
 													closest = newDist;
 													closestSide = checkNearby;
@@ -1104,11 +1102,11 @@ const j = player$1.openContainer;`,
 								// }
 								const placePosition = new BlockPos(placeX, keyPressedDump("shift") ? pos.y - (dir.y + 2) : pos.y + dir.y, placeZ);
 								const hitVec = new Vector3$1(placePosition.x + (newDir.x != 0 ? Math.max(newDir.x, 0) : Math.random()), placePosition.y + (newDir.y != 0 ? Math.max(newDir.y, 0) : Math.random()), placePosition.z + (newDir.z != 0 ? Math.max(newDir.z, 0) : Math.random()));
-								if (scaffoldtower[1] && keyPressedDump("space") && dir.y == -1 && player$1.motion.y < 0.2 && player$1.motion.y > 0.15) player$1.motion.y = 0.42;
-								if (keyPressedDump("shift") && dir.y == 1 && player$1.motion.y > -0.2 && player$1.motion.y < -0.15) player$1.motion.y = -0.42;
-								if (playerControllerDump.onPlayerRightClick(player$1, game$1.world, item, placePosition, placeSide, hitVec)) hud3D.swingArm();
+								if (scaffoldtower[1] && keyPressedDump("space") && dir.y == -1 && player.motion.y < 0.2 && player.motion.y > 0.15) player.motion.y = 0.42;
+								if (keyPressedDump("shift") && dir.y == 1 && player.motion.y > -0.2 && player.motion.y < -0.15) player.motion.y = -0.42;
+								if (playerControllerDump.onPlayerRightClick(player, game$1.world, item, placePosition, placeSide, hitVec)) hud3D.swingArm();
 								if (item.stackSize == 0) {
-									player$1.inventory.main[player$1.inventory.currentItem] = null;
+									player.inventory.main[player.inventory.currentItem] = null;
 									return;
 								}
 							}
@@ -1116,7 +1114,7 @@ const j = player$1.openContainer;`,
 					}
 				}
 				else {
-					if (player$1 && oldHeld != undefined) switchSlot(oldHeld);
+					if (player && oldHeld != undefined) switchSlot(oldHeld);
 					delete tickLoop["Scaffold"];
 				}
 			});
@@ -1149,7 +1147,7 @@ const j = player$1.openContainer;`,
 
 			const survival = new Module("SurvivalMode", function(callback) {
 				if (callback) {
-					if (player$1) player$1.setGamemode(GameMode.fromId("survival"));
+					if (player) player.setGamemode(GameMode.fromId("survival"));
 					survival.toggle();
 				}
 			});

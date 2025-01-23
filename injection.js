@@ -471,7 +471,7 @@ const j = player.openContainer;`,
 				game$1.chat.addChat({text: chatString});
 				return;
 			case ".setoption":
-			case ".reset" {
+			case ".reset": {
 				const module = args.length > 1 && getModule(args[1]);
 				const reset = args[0] == ".reset";
 				if (module) {

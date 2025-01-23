@@ -372,8 +372,8 @@ function modifyCode(text) {
 			hud3D.remove(hud3D.rightArm);
 			hud3D.rightArm = undefined;
 			player.profile.cosmetics.skin = "GrandDad";
-			$.cosmetics.skin = "GrandDad";
-			$.cosmetics.cape = "GrandDad";
+			h.cosmetics.skin = "GrandDad";
+			h.cosmetics.cape = "GrandDad";
 		}
 	`);
 	addReplacement('bob:{id:"bob",name:"Bob",tier:0,skinny:!1},', 'GrandDad:{id:"GrandDad",name:"GrandDad",tier:2,skinny:!1},');

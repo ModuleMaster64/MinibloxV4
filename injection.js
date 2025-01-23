@@ -38,7 +38,9 @@ function addDump(replacement, code) {
 }
 
 function modifyCode(text) {
-	for(const [name, regex] of Object.entries(dumpedVarNames)){
+	const unmatchedDumps = Object.entries(dumpedVarNames).filter(e => !text.match(e[1]));
+	if (unmatchedDumps.length > 0) console.warn("Unmatched dumps:", unmatchedDumps);
+	for(const [name, regex] of Object.entries(dumpedVarNames)) {
 		const matched = text.match(regex);
 		if (matched) {
 			for(const [replacement, code] of Object.entries(replacements)){
@@ -72,7 +74,7 @@ function modifyCode(text) {
 	addDump('moveForwardDump', 'forward:this\.([a-zA-Z]*)');
 	addDump('keyPressedDump', 'function ([a-zA-Z]*)\\([a-zA-Z]*\\)\{return keyPressed\\([a-zA-Z]*\\)');
 	addDump('entitiesDump', 'this\.([a-zA-Z]*)\.values\\(\\)\\)[a-zA-Z]* instanceof EntityTNTPrimed');
-	addDump('isInvisibleDump', 'ot\.([a-zA-Z]*)\\(\\)\\)&&\\(pt=new ([a-zA-Z]*)\\(new');
+	addDump('isInvisibleDump', '[a-zA-Z]*\.([a-zA-Z]*)\\(\\)\\)&&\\([a-zA-Z]*=new ([a-zA-Z]*)\\(new');
 	addDump('attackDump', 'hitVec.z\}\\)\}\\)\\),player\\$1\.([a-zA-Z]*)');
 	addDump('lastReportedYawDump', 'this\.([a-zA-Z]*)=this\.yaw,this\.last');
 	addDump('windowClickDump', '([a-zA-Z]*)\\(this\.inventorySlots\.windowId');

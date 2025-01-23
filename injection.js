@@ -38,8 +38,6 @@ function addDump(replacement, code) {
 }
 
 function modifyCode(text) {
-	const unmatchedDumps = Object.entries(dumpedVarNames).filter(e => !text.match(e[1]));
-	if (unmatchedDumps.length > 0) console.warn("Unmatched dumps:", unmatchedDumps);
 	for(const [name, regex] of Object.entries(dumpedVarNames)) {
 		const matched = text.match(regex);
 		if (matched) {
@@ -49,6 +47,11 @@ function modifyCode(text) {
 			}
 		}
 	}
+	const unmatchedDumps = Object.entries(dumpedVarNames).filter(e => !text.match(e[1]));
+	if (unmatchedDumps.length > 0) console.warn("Unmatched dumps:", unmatchedDumps);
+
+	const unmatchedReplacements = Object.entries(replacements).filter(e => !text.match(e[0]));
+	if (unmatchedReplacements.length > 0) console.warn("Unmatched replacements:", unmatchedReplacements);
 
 	for(const [replacement, code] of Object.entries(replacements)) {
 		text = text.replace(replacement, code[1] ? code[0] : replacement + code[0]);

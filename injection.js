@@ -41,7 +41,6 @@ function modifyCode(text) {
 	for(const [name, regex] of Object.entries(dumpedVarNames)){
 		const matched = text.match(regex);
 		if (matched) {
-			console.log(name, regex, matched);
 			for(const [replacement, code] of Object.entries(replacements)){
 				delete replacements[replacement];
 				replacements[replacement.replaceAll(name, matched[1])] = [code[0].replaceAll(name, matched[1]), code[1]];
@@ -50,7 +49,6 @@ function modifyCode(text) {
 	}
 
 	for(const [replacement, code] of Object.entries(replacements)) {
-		console.log(replacement);
 		text = text.replace(replacement, code[1] ? code[0] : replacement + code[0]);
 		// TODO: handle the 2nd occurrence, which inside a string in a varible called "jsContent".
 		// (screw you vector)

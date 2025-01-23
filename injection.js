@@ -425,18 +425,18 @@ function modifyCode(text) {
 	 In some cases, player.openChest may not be defined.
 	 In those cases, it will be undefined.
 	 ```js
-	 const j = player.openContainer,
-	 _ = j.getLowerChestInventory(),
-	 $ = j.getLowerChestInventory().getSizeInventory() > 27,
-	 et = $ ? 27 : 0;
+	 const m = player.openContainer,
+	 u = m.getLowerChestInventory(),
+	 h = m.getLowerChestInventory().getSizeInventory() > 27,
+	 p = h ? 27 : 0;
 	 ```
 	 and because `_` is invoking a function in `j`,
 	 it'll throw an error and break all of the UI.
 	 */
 	addReplacement(
-		'const j = player.openContainer',
+		'const m=player.openContainer',
 		`if (!player.openContainer) return;
-const j = player.openContainer;`,
+const m = player.openContainer,`,
 		true
 	);
 

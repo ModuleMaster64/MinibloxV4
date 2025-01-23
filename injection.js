@@ -326,9 +326,9 @@ function modifyCode(text) {
 	addReplacement('setInterval(()=>this.fixedUpdate(),MSPT)', 'this.tickLoop=setInterval(()=>this.fixedUpdate(),MSPT)', true);
 
 	// PHASE
-	addReplacement('calculateXOffset(A,this.getEntityBoundingBox(),g.x)', 'enabledModules["Phase"] ? g.x : calculateXOffset(ft,this.getEntityBoundingBox(),g.x)', true);
-	addReplacement('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && keyPressedDump("shift") ? g.y : calculateYOffset(ft,this.getEntityBoundingBox(),g.y)', true);
-	addReplacement('calculateZOffset(A,this.getEntityBoundingBox(),g.z)', 'enabledModules["Phase"] ? g.z : calculateZOffset(ft,this.getEntityBoundingBox(),g.z)', true);
+	addReplacement('calculateXOffset(A,this.getEntityBoundingBox(),g.x)', 'enabledModules["Phase"] ? g.x : calculateXOffset(A,this.getEntityBoundingBox(),g.x)', true);
+	addReplacement('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && keyPressedDump("shift") ? g.y : calculateYOffset(A,this.getEntityBoundingBox(),g.y)', true);
+	addReplacement('calculateZOffset(A,this.getEntityBoundingBox(),g.z)', 'enabledModules["Phase"] ? g.z : calculateZOffset(A,this.getEntityBoundingBox(),g.z)', true);
 	addReplacement('pushOutOfBlocks(u,h,p){', 'if (enabledModules["Phase"]) return;');
 
 	// AUTORESPAWN

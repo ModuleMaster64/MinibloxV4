@@ -194,7 +194,13 @@ function modifyCode(text) {
 	`);
 
 	// HOOKS
-	addReplacement('+=$*rt+_*nt}', `
+	// instructions because this replacement is very vague when trying to find it after an update:
+	// 1. search for "moveFlying("
+	// 2. select the first result
+	// 3. look for "this.motion.z+="
+	// 4. use that as the replacement
+	// thanks GOD that I had the old bundle to find this
+	addReplacement('+=h*y+u*x}', `
 		if (this == player) {
 			for(const [index, func] of Object.entries(tickLoop)) if (func) func();
 		}
@@ -216,30 +222,30 @@ function modifyCode(text) {
 		if (vol <= 0 && enabledModules["MusicFix"])
 			return; // don't play, we don't want to waste resources or bandwidth on this.
 		const _ = lodashExports.sample(MUSIC);`, true)
-	addReplacement('ClientSocket.on("CPacketMessage",$=>{', `
-		if (player && $.text && !$.text.startsWith(player.name) && enabledModules["ChatDisabler"] && chatDelay < Date.now()) {
+	addReplacement('ClientSocket.on("CPacketMessage",h=>{', `
+		if (player && h.text && !h.text.startsWith(player.name) && enabledModules["ChatDisabler"] && chatDelay < Date.now()) {
 			chatDelay = Date.now() + 1000;
 			setTimeout(function() {
 				ClientSocket.sendPacket(new SPacketMessage({text: Math.random() + ("\\n" + chatdisablermsg[1]).repeat(20)}));
 			}, 50);
 		}
 
-		if ($.text && $.text.startsWith("\\\\bold\\\\How to play:")) {
+		if (h.text && h.text.startsWith("\\\\bold\\\\How to play:")) {
 			breakStart = Date.now() + 25000;
 		}
 
-		if ($.text && $.text.indexOf("Poll started") != -1 && $.id == undefined && enabledModules["AutoVote"]) {
+		if (h.text && h.text.indexOf("Poll started") != -1 && h.id == undefined && enabledModules["AutoVote"]) {
 			ClientSocket.sendPacket(new SPacketMessage({text: "/vote 2"}));
 		}
 
-		if ($.text && $.text.indexOf("won the game") != -1 && $.id == undefined && enabledModules["AutoQueue"]) {
+		if (h.text && h.text.indexOf("won the game") != -1 && h.id == undefined && enabledModules["AutoQueue"]) {
 			game.requestQueue();
 		}
 	`);
-	addReplacement('ClientSocket.on("CPacketUpdateStatus",$=>{', `
-		if ($.rank && $.rank != "" && RANK.LEVEL[$.rank].permLevel > 2) {
+	addReplacement('ClientSocket.on("CPacketUpdateStatus",h=>{', `
+		if (h.rank && h.rank != "" && RANK.LEVEL[$.rank].permLevel > 2) {
 			game.chat.addChat({
-				text: "STAFF DETECTED : " + $.rank + "\\n".repeat(10),
+				text: "STAFF DETECTED : " + h.rank + "\\n".repeat(10),
 				color: "red"
 			});
 		}

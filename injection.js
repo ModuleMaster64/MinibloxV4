@@ -1,3 +1,6 @@
+/**
+ * @type {Record<string | RegExp, string>}
+ */
 let replacements = {};
 let dumpedVarNames = {};
 const storeName = "a" + crypto.randomUUID().replaceAll("-", "").substring(16);
@@ -46,7 +49,8 @@ function modifyCode(text) {
 		}
 	}
 
-	for(const [replacement, code] of Object.entries(replacements)){
+	for(const [replacement, code] of Object.entries(replacements)) {
+		console.log(replacement);
 		text = text.replace(replacement, code[1] ? code[0] : replacement + code[0]);
 		// TODO: handle the 2nd occurrence, which inside a string in a varible called "jsContent".
 		// (screw you vector)
@@ -278,10 +282,9 @@ function modifyCode(text) {
 	// KILLAURA
 	addReplacement('else player.isBlocking()?', 'else (player.isBlocking() || blocking)?', true);
 	addReplacement('this.entity.isBlocking()', '(this.entity.isBlocking() || this.entity == player && blocking)', true);
-	addReplacement(/const [a-zA-z]+={onGround:this.onGround}/gm, `, realYaw = sendYaw || this.yaw`);
-	addReplacement('this.yaw-this.', 'realYaw-this.', true);
-	addReplacement(/[a-zA-z]+.yaw=player.yaw/, 'nt.yaw=realYaw', true);
-	addReplacement('this.lastReportedYawDump=this.yaw,', 'this.lastReportedYawDump=realYaw,', true);
+	addReplacement('this.yaw-this.', '(sendYaw || this.yaw)-this.', true);
+	addReplacement("x.yaw=player.yaw", 'x.yaw=(sendYaw || this.yaw)', true);
+	addReplacement('this.lastReportedYawDump=this.yaw,', 'this.lastReportedYawDump=(sendYaw || this.yaw),', true);
 	addReplacement('this.neck.rotation.y=controls$1.yaw', 'this.neck.rotation.y=(sendYaw||controls$1.yaw)', true);
 
 	// NOSLOWDOWN

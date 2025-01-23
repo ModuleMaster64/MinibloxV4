@@ -339,25 +339,25 @@ function modifyCode(text) {
 	`);
 
 	// CHAMS
-	addReplacement(')&&(p.mesh.visible=this.shouldRenderEntity(p))', `
-		if (enabledModules["Chams"] && p && p.id != player.id) {
-			for(const mesh in p.mesh.meshes) {
-				p.mesh.meshes[mesh].material.depthTest = false;
-				p.mesh.meshes[mesh].renderOrder = 3;
+	addReplacement(')&&(et.mesh.visible=this.shouldRenderEntity(et))', `
+		if (enabledModules["Chams"] && et && et.id != player.id) {
+			for(const mesh in et.mesh.meshes) {
+				et.mesh.meshes[mesh].material.depthTest = false;
+				et.mesh.meshes[mesh].renderOrder = 3;
 			}
 
-			for(const mesh in p.mesh.armorMesh) {
-				p.mesh.armorMesh[mesh].material.depthTest = false;
-				p.mesh.armorMesh[mesh].renderOrder = 4;
+			for(const mesh in et.mesh.armorMesh) {
+				et.mesh.armorMesh[mesh].material.depthTest = false;
+				et.mesh.armorMesh[mesh].renderOrder = 4;
 			}
 
-			if (p.mesh.capeMesh) {
-				p.mesh.capeMesh.children[0].material.depthTest = false;
-				p.mesh.capeMesh.children[0].renderOrder = 5;
+			if (et.mesh.capeMesh) {
+				et.mesh.capeMesh.children[0].material.depthTest = false;
+				et.mesh.capeMesh.children[0].renderOrder = 5;
 			}
 
-			if (p.mesh.hatMesh) {
-				for(const mesh of p.mesh.hatMesh.children[0].children) {
+			if (et.mesh.hatMesh) {
+				for(const mesh of et.mesh.hatMesh.children[0].children) {
 					if (!mesh.material) continue;
 					mesh.material.depthTest = false;
 					mesh.renderOrder = 4;
@@ -421,7 +421,7 @@ function modifyCode(text) {
 	addReplacement('new SPacketLoginStart({requestedUuid:localStorage.getItem(REQUESTED_UUID_KEY)??void 0,session:localStorage.getItem(SESSION_TOKEN_KEY)??"",hydration:localStorage.getItem("hydration")??"0",metricsId:localStorage.getItem("metrics_id")??"",clientVersion:VERSION$1})', 'new SPacketLoginStart({requestedUuid:void 0,session:(enabledModules["AntiBan"] ? "" : (localStorage.getItem(SESSION_TOKEN_KEY) ?? "")),hydration:"0",metricsId:uuid$1(),clientVersion:VERSION$1})', true);
 
 	// KEY FIX
-	addReplacement('Object.assign(keyMap,_)', '; keyMap["Semicolon"] = "semicolon"; keyMap["Apostrophe"] = "apostrophe";');
+	addReplacement('Object.assign(keyMap,u)', '; keyMap["Semicolon"] = "semicolon"; keyMap["Apostrophe"] = "apostrophe";');
 
 	// SWING FIX
 	addReplacement('player.getActiveItemStack().item instanceof', 'null == ', true);

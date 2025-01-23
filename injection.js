@@ -218,7 +218,7 @@ function modifyCode(text) {
 	addReplacement('updateNameTag(){let h="white",p=1;', 'this.entity.team = this.entity.profile.cosmetics.color;');
 	addReplacement('connect(_,$=!1,et=!1){', 'lastJoined = _;');
 	addReplacement('SliderOption("Render Distance ",2,8,3)', 'SliderOption("Render Distance ",2,64,3)', true);
-	addReplacement('ClientSocket.on("CPacketDisconnect",$=>{', `
+	addReplacement('ClientSocket.on("CPacketDisconnect",h=>{', `
 		if (enabledModules["AutoRejoin"]) {
 			setTimeout(function() {
 				j.connect(lastJoined);

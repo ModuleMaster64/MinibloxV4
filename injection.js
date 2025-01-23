@@ -138,9 +138,9 @@ function modifyCode(text) {
 	addReplacement('if(!x.canConnect){', 'x.errorMessage = x.errorMessage === "Could not join server. You are connected to a VPN or proxy. Please disconnect from it and refresh the page." ? "[Vape] You\'re IP banned (these probably don\'t exist now anyways)" : x.errorMessage;');
 
 	// DRAWING SETUP
-	addReplacement('ut(this,"glintTexture");', `
-		ut(this, "vapeTexture");
-		ut(this, "v4Texture");
+	addReplacement('I(this,"glintTexture");', `
+		I(this, "vapeTexture");
+		I(this, "v4Texture");
 	`);
 	addReplacement('skinManager.loadTextures(),', ',this.loadVape(),');
 	addReplacement('async loadSpritesheet(){', `
@@ -152,9 +152,9 @@ function modifyCode(text) {
 	`, true);
 
 	// TELEPORT FIX
-	addReplacement('player.setPositionAndRotation($.x,$.y,$.z,$.yaw,$.pitch),', `
+	addReplacement('player.setPositionAndRotation(h.x,h.y,h.z,h.yaw,h.pitch),', `
 		noMove = Date.now() + 500;
-		player.setPositionAndRotation($.x,$.y,$.z,$.yaw,$.pitch),
+		player.setPositionAndRotation(h.x,h.y,h.z,h.yaw,h.pitch),
 	`, true);
 
 	addReplacement('COLOR_TOOLTIP_BG,BORDER_SIZE)}', `
@@ -322,7 +322,7 @@ function modifyCode(text) {
 	// TIMER
 	addReplacement('MSPT=50,', '', true);
 	addReplacement('MODE="production";', 'let MSPT = 50;');
-	addReplacement('ut(this,"controller");', 'ut(this, "tickLoop");');
+	addReplacement('I(this,"controller");', 'I(this, "tickLoop");');
 	addReplacement('setInterval(()=>this.fixedUpdate(),MSPT)', 'this.tickLoop=setInterval(()=>this.fixedUpdate(),MSPT)', true);
 
 	// PHASE

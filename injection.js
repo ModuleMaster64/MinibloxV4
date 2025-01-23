@@ -378,38 +378,38 @@ function modifyCode(text) {
 	`);
 	addReplacement('bob:{id:"bob",name:"Bob",tier:0,skinny:!1},', 'GrandDad:{id:"GrandDad",name:"GrandDad",tier:2,skinny:!1},');
 	addReplacement('cloud:{id:"cloud",name:"Cloud",tier:2},', 'GrandDad:{id:"GrandDad",name:"GrandDad",tier:2},');
-	addReplacement('async downloadSkin(_){', `
-		if (_ == "GrandDad") {
-			const $ = skins[_];
+	addReplacement('async downloadSkin(u){', `
+		if (u == "GrandDad") {
+			const $ = skins[u];
 			return new Promise((et, tt) => {
 				textureManager.loader.load("https://raw.githubusercontent.com/7GrandDadPGN/VapeForMiniblox/main/assets/skin.png", rt => {
 					const nt = {
 						atlas: rt,
-						id: _,
+						id: u,
 						skinny: $.skinny,
 						ratio: rt.image.width / 64
 					};
-					SkinManager.createAtlasMat(nt), this.skins[_] = nt, et();
+					SkinManager.createAtlasMat(nt), this.skins[u] = nt, et();
 				}, void 0, function(rt) {
 					console.error(rt), et();
 				});
 			});
 		}
 	`);
-	addReplacement('async downloadCape(_){', `
-		if (_ == "GrandDad") {
-			const $ = capes[_];
+	addReplacement('async downloadCape(u){', `
+		if (u == "GrandDad") {
+			const $ = capes[u];
 			return new Promise((et, tt) => {
 				textureManager.loader.load("https://raw.githubusercontent.com/7GrandDadPGN/VapeForMiniblox/main/assets/cape.png", rt => {
 					const nt = {
 						atlas: rt,
-						id: _,
+						id: u,
 						name: $.name,
 						ratio: rt.image.width / 64,
 						rankLevel: $.tier,
 						isCape: !0
 					};
-					SkinManager.createAtlasMat(nt), this.capes[_] = nt, et();
+					SkinManager.createAtlasMat(nt), this.capes[u] = nt, et();
 				}, void 0, function(rt) {
 					console.error(rt), et();
 				});

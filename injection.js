@@ -326,10 +326,10 @@ function modifyCode(text) {
 	addReplacement('setInterval(()=>this.fixedUpdate(),MSPT)', 'this.tickLoop=setInterval(()=>this.fixedUpdate(),MSPT)', true);
 
 	// PHASE
-	addReplacement('calculateXOffset(ft,this.getEntityBoundingBox(),tt.x)', 'enabledModules["Phase"] ? tt.x : calculateXOffset(ft,this.getEntityBoundingBox(),tt.x)', true);
-	addReplacement('calculateYOffset(ft,this.getEntityBoundingBox(),tt.y)', 'enabledModules["Phase"] && keyPressedDump("shift") ? tt.y : calculateYOffset(ft,this.getEntityBoundingBox(),tt.y)', true);
-	addReplacement('calculateZOffset(ft,this.getEntityBoundingBox(),tt.z)', 'enabledModules["Phase"] ? tt.z : calculateZOffset(ft,this.getEntityBoundingBox(),tt.z)', true);
-	addReplacement('pushOutOfBlocks(_,$,et){', 'if (enabledModules["Phase"]) return;');
+	addReplacement('calculateXOffset(A,this.getEntityBoundingBox(),g.x)', 'enabledModules["Phase"] ? g.x : calculateXOffset(ft,this.getEntityBoundingBox(),g.x)', true);
+	addReplacement('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && keyPressedDump("shift") ? g.y : calculateYOffset(ft,this.getEntityBoundingBox(),g.y)', true);
+	addReplacement('calculateZOffset(A,this.getEntityBoundingBox(),g.z)', 'enabledModules["Phase"] ? g.z : calculateZOffset(ft,this.getEntityBoundingBox(),g.z)', true);
+	addReplacement('pushOutOfBlocks(u,h,p){', 'if (enabledModules["Phase"]) return;');
 
 	// AUTORESPAWN
 	addReplacement('this.game.info.showSignEditor=null,exitPointerLock())', `

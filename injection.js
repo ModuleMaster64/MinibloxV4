@@ -56,11 +56,11 @@ function modifyCode(text) {
 		// (screw you vector)
 	}
 
-	var newScript = document.createElement("script");
+	const newScript = document.createElement("script");
 	newScript.type = "module";
 	newScript.crossOrigin = "";
 	newScript.textContent = text;
-	var head = document.querySelector("head");
+	const head = document.querySelector("head");
 	head.appendChild(newScript);
 	newScript.textContent = "";
 	newScript.remove();

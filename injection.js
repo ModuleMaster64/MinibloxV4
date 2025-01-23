@@ -253,16 +253,16 @@ function modifyCode(text) {
 	addReplacement('at=keyPressedDump("shift")||touchcontrols.sprinting', '||enabledModules["Sprint"]');
 
 	// VELOCITY
-	addReplacement('"CPacketEntityVelocity",$=>{const et=j.world.entitiesDump.get($.id);', `
-		if (player && $.id == player.id && enabledModules["Velocity"]) {
+	addReplacement('"CPacketEntityVelocity",h=>{const p=m.world.entitiesDump.get(h.id);', `
+		if (player && h.id == player.id && enabledModules["Velocity"]) {
 			if (velocityhori[1] == 0 && velocityvert[1] == 0) return;
-			$.motion = new Vector3$1($.motion.x * velocityhori[1], $.motion.y * velocityvert[1], $.motion.z * velocityhori[1]);
+			h.motion = new Vector3$1($.motion.x * velocityhori[1], h.motion.y * velocityvert[1], h.motion.z * velocityhori[1]);
 		}
 	`);
-	addReplacement('"CPacketExplosion",$=>{', `
-		if ($.playerPos && enabledModules["Velocity"]) {
+	addReplacement('"CPacketExplosion",h=>{', `
+		if (h.playerPos && enabledModules["Velocity"]) {
 			if (velocityhori[1] == 0 && velocityvert[1] == 0) return;
-			$.playerPos = new Vector3$1($.playerPos.x * velocityhori[1], $.playerPos.y * velocityvert[1], $.playerPos.z * velocityhori[1]);
+			h.playerPos = new Vector3$1(h.playerPos.x * velocityhori[1], h.playerPos.y * velocityvert[1], h.playerPos.z * velocityhori[1]);
 		}
 	`);
 

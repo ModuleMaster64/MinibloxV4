@@ -72,7 +72,7 @@ function modifyCode(text) {
 	// DUMPING
 	addDump('moveStrafeDump', 'strafe:this\.([a-zA-Z]*)');
 	addDump('moveForwardDump', 'forward:this\.([a-zA-Z]*)');
-	addDump('keyPressedDump', 'function ([a-zA-Z]*)\\(j\\)\{return keyPressed\\(j\\)');
+	addDump('keyPressedDump', 'function ([a-zA-Z]*)\\([a-zA-Z]*\\)\{return keyPressed\\([a-zA-Z]*\\)');
 	addDump('entitiesDump', 'this\.([a-zA-Z]*)\.values\\(\\)\\)nt instanceof EntityTNTPrimed');
 	addDump('isInvisibleDump', 'ot\.([a-zA-Z]*)\\(\\)\\)&&\\(pt=new ([a-zA-Z]*)\\(new');
 	addDump('attackDump', 'hitVec.z\}\\)\}\\)\\),player\\$1\.([a-zA-Z]*)');
@@ -250,7 +250,7 @@ function modifyCode(text) {
 	addReplacement('bindKeysWithDefaults("i",j=>{', 'bindKeysWithDefaults("apostrophe",j=>{', true);
 
 	// SPRINT
-	addReplacement('at=keyPressedDump("shift")||touchcontrols.sprinting', '||enabledModules["Sprint"]');
+	addReplacement('b=keyPressedDump("shift")||touchcontrols.sprinting', '||enabledModules["Sprint"]');
 
 	// VELOCITY
 	addReplacement('"CPacketEntityVelocity",h=>{const p=m.world.entitiesDump.get(h.id);', `

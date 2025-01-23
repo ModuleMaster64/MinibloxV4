@@ -233,12 +233,12 @@ function modifyCode(text) {
 		}
 
 		if ($.text && $.text.indexOf("won the game") != -1 && $.id == undefined && enabledModules["AutoQueue"]) {
-			game$1.requestQueue();
+			game.requestQueue();
 		}
 	`);
 	addReplacement('ClientSocket.on("CPacketUpdateStatus",$=>{', `
 		if ($.rank && $.rank != "" && RANK.LEVEL[$.rank].permLevel > 2) {
-			game$1.chat.addChat({
+			game.chat.addChat({
 				text: "STAFF DETECTED : " + $.rank + "\\n".repeat(10),
 				color: "red"
 			});
@@ -450,7 +450,7 @@ const j = player.openContainer;`,
 					const module = args.length > 1 && getModule(args[1]);
 					if (module) {
 						module.toggle();
-						game$1.chat.addChat({
+						game.chat.addChat({
 							text: module.name + (module.enabled ? " Enabled!" : " Disabled!"),
 							color: module.enabled ? "lime" : "red"
 						});
@@ -463,12 +463,12 @@ const j = player.openContainer;`,
 			case ".modules":
 				chatString = "Module List\\n";
 				for(const [name, module] of Object.entries(modules)) chatString += "\\n" + name;
-				game$1.chat.addChat({text: chatString});
+				game.chat.addChat({text: chatString});
 				return this.closeInput();
 			case ".binds":
 				chatString = "Bind List\\n";
 				for(const [name, module] of Object.entries(modules)) chatString += "\\n" + name + " : " + (module.bind != "" ? module.bind : "none");
-				game$1.chat.addChat({text: chatString});
+				game.chat.addChat({text: chatString});
 				return this.closeInput();
 			case ".setoption":
 			case ".reset": {
@@ -478,7 +478,7 @@ const j = player.openContainer;`,
 					if (args.length < 3) {
 						chatString = module.name + " Options";
 						for(const [name, value] of Object.entries(module.options)) chatString += "\\n" + name + " : " + value[0].name + " : " + value[1];
-						game$1.chat.addChat({text: chatString});
+						game.chat.addChat({text: chatString});
 						return this.closeInput();
 					}
 
@@ -491,13 +491,13 @@ const j = player.openContainer;`,
 					// ! don't change the default value (the last option), otherwise .reset won't work properly!
 					if (reset) {
 						option[1] = option[option.length - 1];
-						game$1.chat.addChat({text: "Reset " + module.name + " " + option[2] + " to " + option[1]});
+						game.chat.addChat({text: "Reset " + module.name + " " + option[2] + " to " + option[1]});
 						return this.closeInput();
 					}
 					if (option[0] == Number) option[1] = !isNaN(Number.parseFloat(args[3])) ? Number.parseFloat(args[3]) : option[1];
 					else if (option[0] == Boolean) option[1] = args[3] == "true";
 					else if (option[0] == String) option[1] = args.slice(3).join(" ");
-					game$1.chat.addChat({text: "Set " + module.name + " " + option[2] + " to " + option[1]});
+					game.chat.addChat({text: "Set " + module.name + " " + option[2] + " to " + option[1]});
 				}
 				return this.closeInput();
 			}
@@ -507,20 +507,20 @@ const j = player.openContainer;`,
 					switch (args[1]) {
 						case "save":
 							globalThis.${storeName}.saveVapeConfig(args[2]);
-							game$1.chat.addChat({text: "Saved config " + args[2]});
+							game.chat.addChat({text: "Saved config " + args[2]});
 							break;
 						case "load":
 							globalThis.${storeName}.saveVapeConfig();
 							globalThis.${storeName}.loadVapeConfig(args[2]);
-							game$1.chat.addChat({text: "Loaded config " + args[2]});
+							game.chat.addChat({text: "Loaded config " + args[2]});
 							break;
 						case "import":
 							globalThis.${storeName}.importVapeConfig(args[2]);
-							game$1.chat.addChat({text: "Imported config"});
+							game.chat.addChat({text: "Imported config"});
 							break;
 						case "export":
 							globalThis.${storeName}.exportVapeConfig();
-							game$1.chat.addChat({text: "Config set to clipboard!"});
+							game.chat.addChat({text: "Config set to clipboard!"});
 							break;
 					}
 				}
@@ -555,13 +555,13 @@ const j = player.openContainer;`,
 				setbind(key, manual) {
 					if (this.bind != "") delete keybindCallbacks[this.bind];
 					this.bind = key;
-					if (manual) game$1.chat.addChat({text: "Bound " + this.name + " to " + (key == "" ? "none" : key) + "!"});
+					if (manual) game.chat.addChat({text: "Bound " + this.name + " to " + (key == "" ? "none" : key) + "!"});
 					if (key == "") return;
 					const module = this;
 					keybindCallbacks[this.bind] = function(j) {
 						if (Game.isActive()) {
 							module.toggle();
-							game$1.chat.addChat({
+							game.chat.addChat({
 								text: module.name + (module.enabled ? " Enabled!" : " Disabled!"),
 								color: module.enabled ? "lime" : "red"
 							});
@@ -590,7 +590,7 @@ const j = player.openContainer;`,
 			new Module("AntiCheat", function(callback) {
 				if (!callback)
 					return; // TODO: deinitialization logic
-				const entities = game$1.world.entitiesDump;
+				const entities = game.world.entitiesDump;
 				for (const entity of entities) {
 						if (!entity instanceof EntityPlayer)
 							continue; // only go through players
@@ -613,7 +613,7 @@ const j = player.openContainer;`,
 						const boundingBox = player.getEntityBoundingBox();
 						const clone = boundingBox.min.clone();
 						clone.y -= noFallExtraY[1];
-						const block = rayTraceBlocks(boundingBox.min, clone, true, false, false, game$1.world);
+						const block = rayTraceBlocks(boundingBox.min, clone, true, false, false, game.world);
 						if (block) {
 							sendY = player.pos.y + noFallExtraY[1];
 						}
@@ -632,7 +632,7 @@ const j = player.openContainer;`,
 				if (callback) {
 					let ticks = 0;
 					tickLoop["AntiFall"] = function() {
-        				const ray = rayTraceBlocks(player.getEyePos(), player.getEyePos().clone().setY(0), false, false, false, game$1.world);
+        				const ray = rayTraceBlocks(player.getEyePos(), player.getEyePos().clone().setY(0), false, false, false, game.world);
 						if (player.fallDistance > 2.8 && !ray) {
 							player.motion.y = 0;
 						}
@@ -717,7 +717,7 @@ const j = player.openContainer;`,
 			}
 
 			function getTeam(entity) {
-				const entry = game$1.playerList.playerDataMap.get(entity.id);
+				const entry = game.playerList.playerDataMap.get(entity.id);
 				if (!entry) return;
 				return entry.color != "white" ? entry.color : undefined;
 			}
@@ -731,7 +731,7 @@ const j = player.openContainer;`,
 						mesh.material.opacity = 0.5;
 						mesh.material.color.set(255, 0, 0);
 						mesh.renderOrder = 6;
-						game$1.gameScene.ambientMeshes.add(mesh);
+						game.gameScene.ambientMeshes.add(mesh);
 						boxMeshes.push(mesh);
 					}
 					tickLoop["Killaura"] = function() {
@@ -739,7 +739,7 @@ const j = player.openContainer;`,
 						didSwing = false;
 						const localPos = controls.position.clone();
 						const localTeam = getTeam(player);
-						const entities = game$1.world.entitiesDump;
+						const entities = game.world.entitiesDump;
 
 						attackList = [];
 						if (!killauraitem[1] || swordCheck()) {
@@ -914,7 +914,7 @@ const j = player.openContainer;`,
 						if (breakStart > Date.now()) return;
 						let offset = breakerrange[1];
 						for (const block of BlockPos.getAllInBoxMutable(new BlockPos(player.pos.x - offset, player.pos.y - offset, player.pos.z - offset), new BlockPos(player.pos.x + offset, player.pos.y + offset, player.pos.z + offset))) {
-							if (game$1.world.getBlockState(block).getBlock() instanceof BlockDragonEgg) {
+							if (game.world.getBlockState(block).getBlock() instanceof BlockDragonEgg) {
 								if ((attemptDelay[block] || 0) > Date.now()) continue;
 								attemptDelay[block] = Date.now() + 500;
 								ClientSocket.sendPacket(new SPacketClick({
@@ -1040,20 +1040,20 @@ const j = player.openContainer;`,
 
 			function getPossibleSides(pos) {
 				for(const side of EnumFacing.VALUES) {
-					const state = game$1.world.getBlockState(pos.add(side.toVector().x, side.toVector().y, side.toVector().z));
+					const state = game.world.getBlockState(pos.add(side.toVector().x, side.toVector().y, side.toVector().z));
 					if (state.getBlock().material != Materials.air) return side.getOpposite();
 				}
 			}
 
 			function switchSlot(slot) {
 				player.inventory.currentItem = slot;
-				game$1.info.selectedSlot = slot;
+				game.info.selectedSlot = slot;
 			}
 
 			let scaffoldtower, oldHeld, scaffoldextend;
 			const scaffold = new Module("Scaffold", function(callback) {
 				if (callback) {
-					if (player) oldHeld = game$1.info.selectedSlot;
+					if (player) oldHeld = game.info.selectedSlot;
 					tickLoop["Scaffold"] = function() {
 						for(let i = 0; i < 9; i++) {
 							const item = player.inventory.main[i];
@@ -1067,7 +1067,7 @@ const j = player.openContainer;`,
 						if (item && item.getItem() instanceof ItemBlock) {
 							let placeSide;
 							let pos = new BlockPos(player.pos.x, player.pos.y - 1, player.pos.z);
-							if (game$1.world.getBlockState(pos).getBlock().material == Materials.air) {
+							if (game.world.getBlockState(pos).getBlock().material == Materials.air) {
 								placeSide = getPossibleSides(pos);
 								if (!placeSide) {
 									let closestSide, closestPos;
@@ -1106,7 +1106,7 @@ const j = player.openContainer;`,
 								const hitVec = new Vector3$1(placePosition.x + (newDir.x != 0 ? Math.max(newDir.x, 0) : Math.random()), placePosition.y + (newDir.y != 0 ? Math.max(newDir.y, 0) : Math.random()), placePosition.z + (newDir.z != 0 ? Math.max(newDir.z, 0) : Math.random()));
 								if (scaffoldtower[1] && keyPressedDump("space") && dir.y == -1 && player.motion.y < 0.2 && player.motion.y > 0.15) player.motion.y = 0.42;
 								if (keyPressedDump("shift") && dir.y == 1 && player.motion.y > -0.2 && player.motion.y < -0.15) player.motion.y = -0.42;
-								if (playerControllerDump.onPlayerRightClick(player, game$1.world, item, placePosition, placeSide, hitVec)) hud3D.swingArm();
+								if (playerControllerDump.onPlayerRightClick(player, game.world, item, placePosition, placeSide, hitVec)) hud3D.swingArm();
 								if (item.stackSize == 0) {
 									player.inventory.main[player.inventory.currentItem] = null;
 									return;
@@ -1124,10 +1124,10 @@ const j = player.openContainer;`,
 			// scaffoldextend = scaffold.addoption("Extend", Number, 0);
 
 			function reloadTickLoop(value) {
-				if (game$1.tickLoop) {
+				if (game.tickLoop) {
 					MSPT = value;
-					clearInterval(game$1.tickLoop);
-					game$1.tickLoop = setInterval(() => game$1.fixedUpdate(), MSPT);
+					clearInterval(game.tickLoop);
+					game.tickLoop = setInterval(() => game.fixedUpdate(), MSPT);
 				}
 			}
 

@@ -535,7 +535,7 @@ const j = player.openContainer;`,
 	`);
 
 	// MAIN
-	addReplacement('document.addEventListener("contextmenu",j=>j.preventDefault());', `
+	addReplacement('document.addEventListener("contextmenu",m=>m.preventDefault());', `
 		// my code lol
 		(function() {
 			class Module {

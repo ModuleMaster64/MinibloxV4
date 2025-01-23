@@ -434,8 +434,8 @@ const j = player.openContainer;`,
 	);
 
 	// COMMANDS
-	addReplacement('tryExecuteClientside(et,_))return;', `
-		const str = $.toLocaleLowerCase();
+	addReplacement('submit(u){', `
+		const str = u.toLocaleLowerCase();
 		const args = str.split(" ");
 		let chatString;
 		switch (args[0]) {

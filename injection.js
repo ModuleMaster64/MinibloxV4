@@ -123,8 +123,7 @@ function modifyCode(text) {
 		for (j = 0; j < 10; j++) keybindList[48 + j] = keybindList["Digit" + j] = "" + j;
 		window.addEventListener("keydown", function(key) {
 			const func = keybindCallbacks[keybindList[key.code]];
-			func(key);
-			// call$1(func, key);
+			if (func) func(key);
 		});
 	`);
 

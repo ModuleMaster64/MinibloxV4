@@ -12,9 +12,13 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
+// @require      https://codeberg.org/RealPacket/VapeForMiniblox/raw/branch/main/injection.js
 // @run-at       document-start
 // ==/UserScript==
 
+// would reuse this, but Codeberg doesn't have CORS headers so we can't use it.
+// this would fix the caching issues, but sadly CORS moment.
+/*
 (function() {
 	'use strict';
 
@@ -55,3 +59,4 @@
 		});
 	}
 })();
+*/

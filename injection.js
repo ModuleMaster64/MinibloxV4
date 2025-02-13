@@ -260,8 +260,8 @@ function modifyCode(text) {
 	`);
 
 	// REBIND
-	addReplacement('bindKeysWithDefaults("b",j=>{', 'bindKeysWithDefaults("semicolon",j=>{', true);
-	addReplacement('bindKeysWithDefaults("i",j=>{', 'bindKeysWithDefaults("apostrophe",j=>{', true);
+	addReplacement('bindKeysWithDefaults("b",m=>{', 'bindKeysWithDefaults("semicolon",m=>{', true);
+	addReplacement('bindKeysWithDefaults("i",m=>{', 'bindKeysWithDefaults("apostrophe",m=>{', true);
 
 	// SPRINT
 	addReplacement('b=keyPressedDump("shift")||touchcontrols.sprinting', '||enabledModules["Sprint"]');

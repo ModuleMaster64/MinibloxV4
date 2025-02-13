@@ -225,11 +225,11 @@ function modifyCode(text) {
 			}, 400);
 		}
 	`);
-	addReplacement('const _ = lodashExports.sample(MUSIC);',
+	addReplacement('const u = lodashExports.sample(MUSIC);',
 		`const vol = Options$1.sound.music.volume / BASE_VOLUME;
 		if (vol <= 0 && enabledModules["MusicFix"])
 			return; // don't play, we don't want to waste resources or bandwidth on this.
-		const _ = lodashExports.sample(MUSIC);`, true)
+		const u = lodashExports.sample(MUSIC);`, true)
 	addReplacement('ClientSocket.on("CPacketMessage",h=>{', `
 		if (player && h.text && !h.text.startsWith(player.name) && enabledModules["ChatDisabler"] && chatDelay < Date.now()) {
 			chatDelay = Date.now() + 1000;

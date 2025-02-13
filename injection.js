@@ -298,7 +298,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	addReplacement('this.yaw-this.', '(sendYaw || this.yaw)-this.', true);
 	addReplacement("x.yaw=player.yaw", 'x.yaw=(sendYaw || this.yaw)', true);
 	addReplacement('this.lastReportedYawDump=this.yaw,', 'this.lastReportedYawDump=(sendYaw || this.yaw),', true);
-	addReplacement('this.neck.rotation.y=controls$1.yaw', 'this.neck.rotation.y=(sendYaw||controls$1.yaw)', true);
+	addReplacement('this.neck.rotation.y=controls.yaw', 'this.neck.rotation.y=(sendYaw||controls.yaw)', true);
 
 	// NOSLOWDOWN
 	addReplacement('updatePlayerMoveState(),this.isUsingItem()', 'updatePlayerMoveState(),(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);

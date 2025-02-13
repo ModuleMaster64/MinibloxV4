@@ -29,8 +29,14 @@ Object.getOwnPropertyDescriptors = replaceAndCopyFunction(Object.getOwnPropertyD
 	return list;
 });
 
-function addReplacement(replacement, code, replaceit) {
-	replacements[replacement] = [code, replaceit];
+/**
+ * 
+ * @param {string} replacement
+ * @param {string} code
+ * @param {boolean} replace
+ */
+function addModification(replacement, code, replace) {
+	replacements[replacement] = [code, replace];
 }
 
 function addDump(replacement, code) {
@@ -91,15 +97,15 @@ function modifyCode(text) {
 	addDump('syncItemDump', 'playerControllerMP\.([a-zA-Z]*)\\(\\),ClientSocket\.sendPacket');
 
 	// PRE
-	addReplacement('document.addEventListener("DOMContentLoaded",startGame,!1);', `
+	addModification('document.addEventListener("DOMContentLoaded",startGame,!1);', `
 		setTimeout(function() {
 			var DOMContentLoaded_event = document.createEvent("Event");
 			DOMContentLoaded_event.initEvent("DOMContentLoaded", true, true);
 			document.dispatchEvent(DOMContentLoaded_event);
 		}, 0);
 	`);
-	addReplacement('y:this.getEntityBoundingBox().min.y,', 'y:sendY != false ? sendY : this.getEntityBoundingBox().min.y,', true);
-	addReplacement('Potions.jump.getId(),"5");', `
+	addModification('y:this.getEntityBoundingBox().min.y,', 'y:sendY != false ? sendY : this.getEntityBoundingBox().min.y,', true);
+	addModification('Potions.jump.getId(),"5");', `
 		let blocking = false;
 		let sendYaw = false;
 		let sendY = false;
@@ -134,11 +140,11 @@ function modifyCode(text) {
 		});
 	`);
 
-	addReplacement('VERSION$1," | ",', `"${vapeName} v3.0.0"," | ",`);
-	addReplacement('if(!x.canConnect){', 'x.errorMessage = x.errorMessage === "Could not join server. You are connected to a VPN or proxy. Please disconnect from it and refresh the page." ? "[Vape] You\'re IP banned (these probably don\'t exist now anyways)" : x.errorMessage;');
+	addModification('VERSION$1," | ",', `"${vapeName} v3.0.0"," | ",`);
+	addModification('if(!x.canConnect){', 'x.errorMessage = x.errorMessage === "Could not join server. You are connected to a VPN or proxy. Please disconnect from it and refresh the page." ? "[Vape] You\'re IP banned (these probably don\'t exist now anyways)" : x.errorMessage;');
 
 	// DRAWING SETUP
-	addReplacement('I(this,"glintTexture");', `
+	addModification('I(this,"glintTexture");', `
 		I(this, "vapeTexture");
 		I(this, "v4Texture");
 	`);
@@ -149,8 +155,8 @@ function modifyCode(text) {
 	const corsMoment = url => {
 		return new URL(`https://corsproxy.io/?url=${url}`).href;
 	}
-	addReplacement('skinManager.loadTextures(),', ',this.loadVape(),');
-	addReplacement('async loadSpritesheet(){', `
+	addModification('skinManager.loadTextures(),', ',this.loadVape(),');
+	addModification('async loadSpritesheet(){', `
 		async loadVape() {
 			this.vapeTexture = await this.loader.loadAsync("${corsMoment("https://codeberg.org/RealPacket/VapeForMiniblox/raw/branch/main/assets/logo.png")}");
 			this.v4Texture = await this.loader.loadAsync("${corsMoment("https://codeberg.org/RealPacket/VapeForMiniblox/raw/branch/main/assets/logov4.png")}");
@@ -159,12 +165,12 @@ function modifyCode(text) {
 	`, true);
 
 	// TELEPORT FIX
-	addReplacement('player.setPositionAndRotation(h.x,h.y,h.z,h.yaw,h.pitch),', `
+	addModification('player.setPositionAndRotation(h.x,h.y,h.z,h.yaw,h.pitch),', `
 		noMove = Date.now() + 500;
 		player.setPositionAndRotation(h.x,h.y,h.z,h.yaw,h.pitch),
 	`, true);
 
-	addReplacement('COLOR_TOOLTIP_BG,BORDER_SIZE)}', `
+	addModification('COLOR_TOOLTIP_BG,BORDER_SIZE)}', `
 		function drawImage(ctx, img, posX, posY, sizeX, sizeY, color) {
 			if (color) {
 				ctx.fillStyle = color;
@@ -177,7 +183,7 @@ function modifyCode(text) {
 	`);
 
 	// TEXT GUI
-	addReplacement('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
+	addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
 		if (ctx$3 && enabledModules["TextGUI"]) {
 			const colorOffset = (Date.now() / 4000);
 			const posX = 15;
@@ -214,18 +220,18 @@ function modifyCode(text) {
 	// 3. look for "this.motion.z+="
 	// 4. use that as the replacement
 	// thanks GOD that I had the old bundle to find this
-	addReplacement('+=h*y+u*x}', `
+	addModification('+=h*y+u*x}', `
 		if (this == player) {
 			for(const [index, func] of Object.entries(tickLoop)) if (func) func();
 		}
 	`);
-	addReplacement('this.game.unleash.isEnabled("disable-ads")', 'true', true);
+	addModification('this.game.unleash.isEnabled("disable-ads")', 'true', true);
 	// in EntityManager, renderEntities function
-	addReplacement('h.render()})', '; for(const [index, func] of Object.entries(renderTickLoop)) if (func) func();');
-	addReplacement('updateNameTag(){let h="white",p=1;', 'this.entity.team = this.entity.profile.cosmetics.color;');
-	addReplacement('connect(u,h=!1,p=!1){', 'lastJoined = u;');
-	addReplacement('SliderOption("Render Distance ",2,8,3)', 'SliderOption("Render Distance ",2,64,3)', true);
-	addReplacement('ClientSocket.on("CPacketDisconnect",h=>{', `
+	addModification('h.render()})', '; for(const [index, func] of Object.entries(renderTickLoop)) if (func) func();');
+	addModification('updateNameTag(){let h="white",p=1;', 'this.entity.team = this.entity.profile.cosmetics.color;');
+	addModification('connect(u,h=!1,p=!1){', 'lastJoined = u;');
+	addModification('SliderOption("Render Distance ",2,8,3)', 'SliderOption("Render Distance ",2,64,3)', true);
+	addModification('ClientSocket.on("CPacketDisconnect",h=>{', `
 		if (enabledModules["AutoRejoin"]) {
 			setTimeout(function() {
 				j.connect(lastJoined);
@@ -233,12 +239,12 @@ function modifyCode(text) {
 		}
 	`);
 	// MUSIC FIX
-	addReplacement('const u=lodashExports.sample(MUSIC);',
+	addModification('const u=lodashExports.sample(MUSIC);',
 		`const vol = Options$1.sound.music.volume / BASE_VOLUME;
 		if (vol <= 0 && enabledModules["MusicFix"])
 			return; // don't play, we don't want to waste resources or bandwidth on this.
 		const u = lodashExports.sample(MUSIC);`, true)
-	addReplacement('ClientSocket.on("CPacketMessage",h=>{', `
+	addModification('ClientSocket.on("CPacketMessage",h=>{', `
 		if (player && h.text && !h.text.startsWith(player.name) && enabledModules["ChatDisabler"] && chatDelay < Date.now()) {
 			chatDelay = Date.now() + 1000;
 			setTimeout(function() {
@@ -258,7 +264,7 @@ function modifyCode(text) {
 			game.requestQueue();
 		}
 	`);
-	addReplacement('ClientSocket.on("CPacketUpdateStatus",h=>{', `
+	addModification('ClientSocket.on("CPacketUpdateStatus",h=>{', `
 		if (h.rank && h.rank != "" && RANK.LEVEL[$.rank].permLevel > 2) {
 			game.chat.addChat({
 				text: "STAFF DETECTED : " + h.rank + "\\n".repeat(10),
@@ -268,20 +274,20 @@ function modifyCode(text) {
 	`);
 
 	// REBIND
-	addReplacement('bindKeysWithDefaults("b",m=>{', 'bindKeysWithDefaults("semicolon",m=>{', true);
-	addReplacement('bindKeysWithDefaults("i",m=>{', 'bindKeysWithDefaults("apostrophe",m=>{', true);
+	addModification('bindKeysWithDefaults("b",m=>{', 'bindKeysWithDefaults("semicolon",m=>{', true);
+	addModification('bindKeysWithDefaults("i",m=>{', 'bindKeysWithDefaults("apostrophe",m=>{', true);
 
 	// SPRINT
-	addReplacement('b=keyPressedDump("shift")||touchcontrols.sprinting', '||enabledModules["Sprint"]');
+	addModification('b=keyPressedDump("shift")||touchcontrols.sprinting', '||enabledModules["Sprint"]');
 
 	// VELOCITY
-	addReplacement('"CPacketEntityVelocity",h=>{const p=m.world.entitiesDump.get(h.id);', `
+	addModification('"CPacketEntityVelocity",h=>{const p=m.world.entitiesDump.get(h.id);', `
 		if (player && h.id == player.id && enabledModules["Velocity"]) {
 			if (velocityhori[1] == 0 && velocityvert[1] == 0) return;
 			h.motion = new Vector3$1($.motion.x * velocityhori[1], h.motion.y * velocityvert[1], h.motion.z * velocityhori[1]);
 		}
 	`);
-	addReplacement('"CPacketExplosion",h=>{', `
+	addModification('"CPacketExplosion",h=>{', `
 		if (h.playerPos && enabledModules["Velocity"]) {
 			if (velocityhori[1] == 0 && velocityvert[1] == 0) return;
 			h.playerPos = new Vector3$1(h.playerPos.x * velocityhori[1], h.playerPos.y * velocityvert[1], h.playerPos.z * velocityhori[1]);
@@ -289,7 +295,7 @@ function modifyCode(text) {
 	`);
 
 	// KEEPSPRINT
-	addReplacement('g>0&&(h.addVelocity(-Math.sin(this.yaw)*g*.5,.1,-Math.cos(this.yaw)*g*.5),this.motion.x*=.6,this.motion.z*=.6,this.setSprinting(!1)),', `
+	addModification('g>0&&(h.addVelocity(-Math.sin(this.yaw)*g*.5,.1,-Math.cos(this.yaw)*g*.5),this.motion.x*=.6,this.motion.z*=.6,this.setSprinting(!1)),', `
 		if (g > 0) {
 h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 			if (this != player || !enabledModules["KeepSprint"]) {
@@ -301,53 +307,53 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	`, true);
 
 	// KILLAURA
-	addReplacement('else player.isBlocking()?', 'else (player.isBlocking() || blocking)?', true);
-	addReplacement('this.entity.isBlocking()', '(this.entity.isBlocking() || this.entity == player && blocking)', true);
-	addReplacement('this.yaw-this.', '(sendYaw || this.yaw)-this.', true);
-	addReplacement("x.yaw=player.yaw", 'x.yaw=(sendYaw || this.yaw)', true);
-	addReplacement('this.lastReportedYawDump=this.yaw,', 'this.lastReportedYawDump=(sendYaw || this.yaw),', true);
-	addReplacement('this.neck.rotation.y=controls.yaw', 'this.neck.rotation.y=(sendYaw||controls.yaw)', true);
+	addModification('else player.isBlocking()?', 'else (player.isBlocking() || blocking)?', true);
+	addModification('this.entity.isBlocking()', '(this.entity.isBlocking() || this.entity == player && blocking)', true);
+	addModification('this.yaw-this.', '(sendYaw || this.yaw)-this.', true);
+	addModification("x.yaw=player.yaw", 'x.yaw=(sendYaw || this.yaw)', true);
+	addModification('this.lastReportedYawDump=this.yaw,', 'this.lastReportedYawDump=(sendYaw || this.yaw),', true);
+	addModification('this.neck.rotation.y=controls.yaw', 'this.neck.rotation.y=(sendYaw||controls.yaw)', true);
 
 	// NOSLOWDOWN
-	addReplacement('updatePlayerMoveState(),this.isUsingItem()', 'updatePlayerMoveState(),(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
-	addReplacement('S&&!this.isUsingItem()', 'S&&!(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
-	addReplacement('0),this.sneak', ' && !enabledModules["NoSlowdown"]');
+	addModification('updatePlayerMoveState(),this.isUsingItem()', 'updatePlayerMoveState(),(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
+	addModification('S&&!this.isUsingItem()', 'S&&!(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
+	addModification('0),this.sneak', ' && !enabledModules["NoSlowdown"]');
 
 	// STEP
-	addReplacement('p.y=this.stepHeight;', 'p.y=(enabledModules["Step"]?Math.max(stepheight[1],this.stepHeight):this.stepHeight);', true);
+	addModification('p.y=this.stepHeight;', 'p.y=(enabledModules["Step"]?Math.max(stepheight[1],this.stepHeight):this.stepHeight);', true);
 
 	// WTAP
-	addReplacement('this.dead||this.getHealth()<=0)return;', `
+	addModification('this.dead||this.getHealth()<=0)return;', `
 		if (enabledModules["WTap"]) player.serverSprintState = false;
 	`);
 
 	// FASTBREAK
-	addReplacement('u&&player.mode.isCreative()', `||enabledModules["FastBreak"]`);
+	addModification('u&&player.mode.isCreative()', `||enabledModules["FastBreak"]`);
 
 	// INVWALK
-	addReplacement('keyPressed(m)&&Game.isActive(!1)', 'keyPressed(m)&&(Game.isActive(!1)||enabledModules["InvWalk"]&&!game.chat.showInput)', true);
+	addModification('keyPressed(m)&&Game.isActive(!1)', 'keyPressed(m)&&(Game.isActive(!1)||enabledModules["InvWalk"]&&!game.chat.showInput)', true);
 
 	// TIMER
-	addReplacement('MSPT=50,', '', true);
-	addReplacement('MODE="production";', 'let MSPT = 50;');
-	addReplacement('I(this,"controller");', 'I(this, "tickLoop");');
-	addReplacement('setInterval(()=>this.fixedUpdate(),MSPT)', 'this.tickLoop=setInterval(()=>this.fixedUpdate(),MSPT)', true);
+	addModification('MSPT=50,', '', true);
+	addModification('MODE="production";', 'let MSPT = 50;');
+	addModification('I(this,"controller");', 'I(this, "tickLoop");');
+	addModification('setInterval(()=>this.fixedUpdate(),MSPT)', 'this.tickLoop=setInterval(()=>this.fixedUpdate(),MSPT)', true);
 
 	// PHASE
-	addReplacement('calculateXOffset(A,this.getEntityBoundingBox(),g.x)', 'enabledModules["Phase"] ? g.x : calculateXOffset(A,this.getEntityBoundingBox(),g.x)', true);
-	addReplacement('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && keyPressedDump("shift") ? g.y : calculateYOffset(A,this.getEntityBoundingBox(),g.y)', true);
-	addReplacement('calculateZOffset(A,this.getEntityBoundingBox(),g.z)', 'enabledModules["Phase"] ? g.z : calculateZOffset(A,this.getEntityBoundingBox(),g.z)', true);
-	addReplacement('pushOutOfBlocks(u,h,p){', 'if (enabledModules["Phase"]) return;');
+	addModification('calculateXOffset(A,this.getEntityBoundingBox(),g.x)', 'enabledModules["Phase"] ? g.x : calculateXOffset(A,this.getEntityBoundingBox(),g.x)', true);
+	addModification('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && keyPressedDump("shift") ? g.y : calculateYOffset(A,this.getEntityBoundingBox(),g.y)', true);
+	addModification('calculateZOffset(A,this.getEntityBoundingBox(),g.z)', 'enabledModules["Phase"] ? g.z : calculateZOffset(A,this.getEntityBoundingBox(),g.z)', true);
+	addModification('pushOutOfBlocks(u,h,p){', 'if (enabledModules["Phase"]) return;');
 
 	// AUTORESPAWN
-	addReplacement('this.game.info.showSignEditor=null,exitPointerLock())', `
+	addModification('this.game.info.showSignEditor=null,exitPointerLock())', `
 		if (this.showDeathScreen && enabledModules["AutoRespawn"]) {
 			ClientSocket.sendPacket(new SPacketRespawn$1);
 		}
 	`);
 
 	// CHAMS
-	addReplacement(')&&(p.mesh.visible=this.shouldRenderEntity(p))', `
+	addModification(')&&(p.mesh.visible=this.shouldRenderEntity(p))', `
 		if (enabledModules["Chams"] && p && p.id != player.id) {
 			for(const mesh in p.mesh.meshes) {
 				p.mesh.meshes[mesh].material.depthTest = false;
@@ -375,7 +381,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	`);
 
 	// SKIN
-	addReplacement('ClientSocket.on("CPacketSpawnPlayer",h=>{const p=m.world.getPlayerById(h.id);', `
+	addModification('ClientSocket.on("CPacketSpawnPlayer",h=>{const p=m.world.getPlayerById(h.id);', `
 		if (h.socketId === player.socketId && enabledModules["AntiBan"]) {
 			hud3D.remove(hud3D.rightArm);
 			hud3D.rightArm = undefined;
@@ -384,9 +390,9 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 			h.cosmetics.cape = "GrandDad";
 		}
 	`);
-	addReplacement('bob:{id:"bob",name:"Bob",tier:0,skinny:!1},', 'GrandDad:{id:"GrandDad",name:"GrandDad",tier:2,skinny:!1},');
-	addReplacement('cloud:{id:"cloud",name:"Cloud",tier:2},', 'GrandDad:{id:"GrandDad",name:"GrandDad",tier:2},');
-	addReplacement('async downloadSkin(u){', `
+	addModification('bob:{id:"bob",name:"Bob",tier:0,skinny:!1},', 'GrandDad:{id:"GrandDad",name:"GrandDad",tier:2,skinny:!1},');
+	addModification('cloud:{id:"cloud",name:"Cloud",tier:2},', 'GrandDad:{id:"GrandDad",name:"GrandDad",tier:2},');
+	addModification('async downloadSkin(u){', `
 		if (u == "GrandDad") {
 			const $ = skins[u];
 			return new Promise((et, tt) => {
@@ -404,7 +410,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 			});
 		}
 	`);
-	addReplacement('async downloadCape(u){', `
+	addModification('async downloadCape(u){', `
 		if (u == "GrandDad") {
 			const $ = capes[u];
 			return new Promise((et, tt) => {
@@ -426,13 +432,13 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	`);
 
 	// LOGIN BYPASS
-	addReplacement('new SPacketLoginStart({requestedUuid:localStorage.getItem(REQUESTED_UUID_KEY)??void 0,session:localStorage.getItem(SESSION_TOKEN_KEY)??"",hydration:localStorage.getItem("hydration")??"0",metricsId:localStorage.getItem("metrics_id")??"",clientVersion:VERSION$1})', 'new SPacketLoginStart({requestedUuid:void 0,session:(enabledModules["AntiBan"] ? "" : (localStorage.getItem(SESSION_TOKEN_KEY) ?? "")),hydration:"0",metricsId:uuid$1(),clientVersion:VERSION$1})', true);
+	addModification('new SPacketLoginStart({requestedUuid:localStorage.getItem(REQUESTED_UUID_KEY)??void 0,session:localStorage.getItem(SESSION_TOKEN_KEY)??"",hydration:localStorage.getItem("hydration")??"0",metricsId:localStorage.getItem("metrics_id")??"",clientVersion:VERSION$1})', 'new SPacketLoginStart({requestedUuid:void 0,session:(enabledModules["AntiBan"] ? "" : (localStorage.getItem(SESSION_TOKEN_KEY) ?? "")),hydration:"0",metricsId:uuid$1(),clientVersion:VERSION$1})', true);
 
 	// KEY FIX
-	addReplacement('Object.assign(keyMap,u)', '; keyMap["Semicolon"] = "semicolon"; keyMap["Apostrophe"] = "apostrophe";');
+	addModification('Object.assign(keyMap,u)', '; keyMap["Semicolon"] = "semicolon"; keyMap["Apostrophe"] = "apostrophe";');
 
 	// SWING FIX
-	addReplacement('player.getActiveItemStack().item instanceof', 'null == ', true);
+	addModification('player.getActiveItemStack().item instanceof', 'null == ', true);
 	
 	// CONTAINER FIX (vector is very smart)
 	/**
@@ -448,14 +454,14 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	 and because `u` is invoking a function in `m`,
 	 it'll throw an error and break all of the UI.
 	 */
-	addReplacement(
+	addModification(
 		'const m=player.openContainer',
 		`const m = player.openContainer ?? { getLowerChestInventory: () => {getSizeInventory: () => 0} }`,
 		true
 	);
 
 	// COMMANDS
-	addReplacement('submit(u){', `
+	addModification('submit(u){', `
 		const str = this.inputValue.toLocaleLowerCase();
 		const args = str.split(" ");
 		let chatString;
@@ -556,7 +562,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	`);
 
 	// MAIN
-	addReplacement('document.addEventListener("contextmenu",m=>m.preventDefault());', `
+	addModification('document.addEventListener("contextmenu",m=>m.preventDefault());', /*js*/`
 		// my code lol
 		(function() {
 			class Module {

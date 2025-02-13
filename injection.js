@@ -225,7 +225,8 @@ function modifyCode(text) {
 			}, 400);
 		}
 	`);
-	addReplacement('const u = lodashExports.sample(MUSIC);',
+	// MUSIC FIX
+	addReplacement('const u=lodashExports.sample(MUSIC);',
 		`const vol = Options$1.sound.music.volume / BASE_VOLUME;
 		if (vol <= 0 && enabledModules["MusicFix"])
 			return; // don't play, we don't want to waste resources or bandwidth on this.

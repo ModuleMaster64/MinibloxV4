@@ -202,7 +202,7 @@ function modifyCode(text) {
 
 			for(const module of stringList) {
 				offset++;
-				drawText(ctx$3, module, posX + 6, posY + 12 + ((textguisize[1] + 3) * offset), textguisize[1] + "px ", textguifont[1], "left", "top", 1, textguishadow[1], \`HSL(\${((colorOffset - (0.025 * offset)) % 1) * 360}, 100%, 50%)\`);
+				drawText(ctx$3, module, posX + 6, posY + 12 + ((textguisize[1] + 3) * offset), textguisize[1] + "px " + textguifont[1], \`HSL(\${((colorOffset - (0.025 * offset)) % 1) * 360}, 100%, 50%)\`, "left", "top", 1, textguishadow[1]);
 			}
 		}
 	`);

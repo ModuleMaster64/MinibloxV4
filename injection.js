@@ -340,25 +340,25 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	`);
 
 	// CHAMS
-	addReplacement(')&&(et.mesh.visible=this.shouldRenderEntity(et))', `
-		if (enabledModules["Chams"] && et && et.id != player.id) {
-			for(const mesh in et.mesh.meshes) {
-				et.mesh.meshes[mesh].material.depthTest = false;
-				et.mesh.meshes[mesh].renderOrder = 3;
+	addReplacement(')&&(p.mesh.visible=this.shouldRenderEntity(p))', `
+		if (enabledModules["Chams"] && p && p.id != player.id) {
+			for(const mesh in p.mesh.meshes) {
+				p.mesh.meshes[mesh].material.depthTest = false;
+				p.mesh.meshes[mesh].renderOrder = 3;
 			}
 
-			for(const mesh in et.mesh.armorMesh) {
-				et.mesh.armorMesh[mesh].material.depthTest = false;
-				et.mesh.armorMesh[mesh].renderOrder = 4;
+			for(const mesh in p.mesh.armorMesh) {
+				p.mesh.armorMesh[mesh].material.depthTest = false;
+				p.mesh.armorMesh[mesh].renderOrder = 4;
 			}
 
-			if (et.mesh.capeMesh) {
-				et.mesh.capeMesh.children[0].material.depthTest = false;
-				et.mesh.capeMesh.children[0].renderOrder = 5;
+			if (p.mesh.capeMesh) {
+				p.mesh.capeMesh.children[0].material.depthTest = false;
+				p.mesh.capeMesh.children[0].renderOrder = 5;
 			}
 
-			if (et.mesh.hatMesh) {
-				for(const mesh of et.mesh.hatMesh.children[0].children) {
+			if (p.mesh.hatMesh) {
+				for(const mesh of p.mesh.hatMesh.children[0].children) {
 					if (!mesh.material) continue;
 					mesh.material.depthTest = false;
 					mesh.renderOrder = 4;

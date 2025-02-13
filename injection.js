@@ -302,7 +302,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 
 	// NOSLOWDOWN
 	addReplacement('updatePlayerMoveState(),this.isUsingItem()', 'updatePlayerMoveState(),(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
-	addReplacement('it&&!this.isUsingItem()', 'it&&!(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
+	addReplacement('S&&!this.isUsingItem()', 'S&&!(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
 	addReplacement('0),this.sneak', ' && !enabledModules["NoSlowdown"]');
 
 	// STEP

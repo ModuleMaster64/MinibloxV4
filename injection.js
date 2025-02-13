@@ -306,7 +306,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	addReplacement('0),this.sneak', ' && !enabledModules["NoSlowdown"]');
 
 	// STEP
-	addReplacement('et.y=this.stepHeight;', 'et.y=(enabledModules["Step"]?Math.max(stepheight[1],this.stepHeight):this.stepHeight);', true);
+	addReplacement('p.y=this.stepHeight;', 'p.y=(enabledModules["Step"]?Math.max(stepheight[1],this.stepHeight):this.stepHeight);', true);
 
 	// WTAP
 	addReplacement('this.dead||this.getHealth()<=0)return;', `

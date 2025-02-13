@@ -553,8 +553,8 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 				}
 				return this.closeInput();
 		}
-		if (enabledModules["FilterBypass"] && !$.startsWith('/')) {
-			const words = $.split(" ");
+		if (enabledModules["FilterBypass"] && !u.startsWith('/')) {
+			const words = u.split(" ");
 			let newwords = [];
 			for(const word of words) newwords.push(word.charAt(0) + '‎' + word.slice(1));
 			this.inputValue = newwords.join(' ');

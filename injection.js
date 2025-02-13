@@ -281,9 +281,9 @@ function modifyCode(text) {
 	`);
 
 	// KEEPSPRINT
-	addReplacement('tt>0&&($.addVelocity(-Math.sin(this.yaw)*tt*.5,.1,-Math.cos(this.yaw)*tt*.5),this.motion.x*=.6,this.motion.z*=.6,this.setSprinting(!1)),', `
-		if (tt > 0) {
-			$.addVelocity(-Math.sin(this.yaw) * tt * .5, .1, -Math.cos(this.yaw) * tt * .5);
+	addReplacement('g>0&&(h.addVelocity(-Math.sin(this.yaw)*g*.5,.1,-Math.cos(this.yaw)*g*.5),this.motion.x*=.6,this.motion.z*=.6,this.setSprinting(!1)),', `
+		if (g > 0) {
+h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 			if (this != player || !enabledModules["KeepSprint"]) {
 				this.motion.x *= .6;
 				this.motion.z *= .6;

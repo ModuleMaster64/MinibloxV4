@@ -134,7 +134,7 @@ function modifyCode(text) {
 		});
 	`);
 
-	addReplacement('VERSION$1," | ",', `"${vapeName} v2.0.0-dev"," | ",`);
+	addReplacement('VERSION$1," | ",', `"${vapeName} v3.0.0"," | ",`);
 	addReplacement('if(!x.canConnect){', 'x.errorMessage = x.errorMessage === "Could not join server. You are connected to a VPN or proxy. Please disconnect from it and refresh the page." ? "[Vape] You\'re IP banned (these probably don\'t exist now anyways)" : x.errorMessage;');
 
 	// DRAWING SETUP

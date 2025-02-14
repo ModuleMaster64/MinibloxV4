@@ -64,8 +64,9 @@ function modifyCode(text) {
 	const unmatchedReplacements = Object.entries(replacements).filter(r => text.replace(r[0]) === text);
 	if (unmatchedReplacements.length > 0) console.warn("Unmatched replacements:", unmatchedReplacements);
 
+	let modifiedText = text;
 	for(const [replacement, code] of Object.entries(replacements)) {
-		text = text.replace(replacement, code[1] ? code[0] : replacement + code[0]);
+		modifiedText = text.replace(replacement, code[1] ? code[0] : replacement + code[0]);
 		// TODO: handle the 2nd occurrence, which inside a string in a varible called "jsContent".
 		// (screw you vector)
 	}
@@ -73,7 +74,7 @@ function modifyCode(text) {
 	const newScript = document.createElement("script");
 	newScript.type = "module";
 	newScript.crossOrigin = "";
-	newScript.textContent = text;
+	newScript.textContent = modifiedText;
 	const head = document.querySelector("head");
 	head.appendChild(newScript);
 	newScript.textContent = "";

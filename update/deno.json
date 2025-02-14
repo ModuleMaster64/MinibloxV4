@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "dev": "deno run --watch --allow-read --allow-write update-script.ts",
+    "run": "deno run --allow-read --allow-write update-script.ts"
+  },
+  "imports": {
+    "simple-git": "npm:simple-git@^3.27.0",
+    "userscript-metadata": "npm:userscript-metadata@^1.1.0"
+  }
+}

@@ -35,7 +35,7 @@ await Deno.writeTextFile(
 );
 
 let main = await Deno.readTextFile(mainPath);
-// fix @require in main.js so greasemonkey doesn't complain
+// fix @require in main.js so greasyfork doesn't complain
 const regex = /(\/\/ @require +)([^\r\n]+)/g;
 const matches = main.matchAll(regex);
 

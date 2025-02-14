@@ -632,25 +632,21 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 			const velocity = new Module("Velocity", function() {});
 			velocityhori = velocity.addoption("Horizontal", Number, 0);
 			velocityvert = velocity.addoption("Vertical", Number, 0);
-			let noFallExtraY;
-			const NoFall = new Module("NoFall", function(callback) {
+
+			// NoFall
+			new Module("NoFall", function(callback) {
 				if (callback) {
+					let ticks = 0;
 					tickLoop["NoFall"] = function() {
-						// check if the player is falling and above a block
-						// player.fallDistance = 0;
-						const boundingBox = player.getEntityBoundingBox();
-						const clone = boundingBox.min.clone();
-						clone.y -= noFallExtraY[1];
-						const block = rayTraceBlocks(boundingBox.min, clone, true, false, false, game.world);
-						if (block) {
-							sendY = player.pos.y + noFallExtraY[1];
+        				const ray = rayTraceBlocks(player.getEyePos(), player.getEyePos().clone().setY(0), false, false, false, game.world);
+						if (player.fallDistance > 2.5 && ray) {
+							ClientSocket.sendPacket(new SPacketPlayerPosLook({pos: {x: player.pos.x, y: ray.hitVec.y, z: player.pos.z}, onGround: true}));
+							player.fallDistance = 0;
 						}
-					}
-				} else {
-					delete tickLoop["NoFall"];
+					};
 				}
+				else delete tickLoop["NoFall"];
 			});
-			noFallExtraY = NoFall.addoption("extraY", Number, .41);
 
 			// WTap
 			new Module("WTap", function() {});

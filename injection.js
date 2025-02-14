@@ -185,14 +185,14 @@ function modifyCode(text) {
 
 	// TEXT GUI
 	addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
-		if (ctx$3 && enabledModules["TextGUI"]) {
+		if (ctx$5 && enabledModules["TextGUI"]) {
 			const colorOffset = (Date.now() / 4000);
 			const posX = 15;
 			const posY = 17;
-			ctx$3.imageSmoothingEnabled = true;
-			ctx$3.imageSmoothingQuality = "high";
-			drawImage(ctx$3, textureManager.vapeTexture.image, posX, posY, 80, 21, \`HSL(\${(colorOffset % 1) * 360}, 100%, 50%)\`);
-			drawImage(ctx$3, textureManager.v4Texture.image, posX + 81, posY + 1, 33, 18);
+			ctx$5.imageSmoothingEnabled = true;
+			ctx$5.imageSmoothingQuality = "high";
+			drawImage(ctx$5, textureManager.vapeTexture.image, posX, posY, 80, 21, \`HSL(\${(colorOffset % 1) * 360}, 100%, 50%)\`);
+			drawImage(ctx$5, textureManager.v4Texture.image, posX + 81, posY + 1, 33, 18);
 
 			let offset = 0;
 			let stringList = [];
@@ -202,14 +202,14 @@ function modifyCode(text) {
 			}
 
 			stringList.sort(function(a, b) {
-				const compA = ctx$3.measureText(a).width;
-				const compB = ctx$3.measureText(b).width;
+				const compA = ctx$5.measureText(a).width;
+				const compB = ctx$5.measureText(b).width;
 				return compA < compB ? 1 : -1;
 			});
 
 			for(const module of stringList) {
 				offset++;
-				drawText(ctx$3, module, posX + 6, posY + 12 + ((textguisize[1] + 3) * offset), textguisize[1] + "px " + textguifont[1], \`HSL(\${((colorOffset - (0.025 * offset)) % 1) * 360}, 100%, 50%)\`, "left", "top", 1, textguishadow[1]);
+				drawText(ctx$5, module, posX + 6, posY + 12 + ((textguisize[1] + 3) * offset), textguisize[1] + "px " + textguifont[1], \`HSL(\${((colorOffset - (0.025 * offset)) % 1) * 360}, 100%, 50%)\`, "left", "top", 1, textguishadow[1]);
 			}
 		}
 	`);

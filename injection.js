@@ -342,7 +342,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 
 	// PHASE
 	addModification('calculateXOffset(A,this.getEntityBoundingBox(),g.x)', 'enabledModules["Phase"] ? g.x : calculateXOffset(A,this.getEntityBoundingBox(),g.x)', true);
-	addModification('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && keyPressedDump("shift") ? g.y : calculateYOffset(A,this.getEntityBoundingBox(),g.y)', true);
+	addModification('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && !enabledModules["Scaffold"] && keyPressedDump("shift") ? g.y : calculateYOffset(A,this.getEntityBoundingBox(),g.y)', true);
 	addModification('calculateZOffset(A,this.getEntityBoundingBox(),g.z)', 'enabledModules["Phase"] ? g.z : calculateZOffset(A,this.getEntityBoundingBox(),g.z)', true);
 	addModification('pushOutOfBlocks(u,h,p){', 'if (enabledModules["Phase"]) return;');
 
@@ -554,8 +554,8 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 				}
 				return this.closeInput();
 		}
-		if (enabledModules["FilterBypass"] && !u.startsWith('/')) {
-			const words = u.split(" ");
+		if (enabledModules["FilterBypass"] && !this.inputValue.startsWith('/')) {
+			const words = this.inputValue.split(" ");
 			let newwords = [];
 			for(const word of words) newwords.push(word.charAt(0) + '‎' + word.slice(1));
 			this.inputValue = newwords.join(' ');

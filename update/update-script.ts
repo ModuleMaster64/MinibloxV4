@@ -44,7 +44,7 @@ for (const match of matches) {
   const beforeMatch = match[1];
   const urlStr = match[2];
   const url = new URL(urlStr);
-  url.pathname = url.pathname.replace("/branch/main", `/tag/${version}`).replaceAll(/\/tag\/[^/]+/, `/tag/${version}`);
+  url.pathname = url.pathname.replace("/branch/main", `/tag/${version}`).replaceAll(/\/tag\/[^/]+/g, `/tag/${version}`);
   url.hash = "";
   const path = `${baseDirPath}/${url.pathname.split("/").slice(6).join("/")}`;
   const fileContent = Deno.readTextFileSync(path);

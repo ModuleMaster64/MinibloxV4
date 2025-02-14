@@ -5,6 +5,7 @@ let replacements = {};
 let dumpedVarNames = {};
 const storeName = "a" + crypto.randomUUID().replaceAll("-", "").substring(16);
 const vapeName = crypto.randomUUID().replaceAll("-", "").substring(16);
+const VERSION = "3.0.0";
 
 // ANTICHEAT HOOK
 function replaceAndCopyFunction(oldFunc, newFunc) {
@@ -140,7 +141,7 @@ function modifyCode(text) {
 		});
 	`);
 
-	addModification('VERSION$1," | ",', `"${vapeName} v3.0.0"," | ",`);
+	addModification('VERSION$1," | ",', `"${vapeName} v${VERSION}"," | ",`);
 	addModification('if(!x.canConnect){', 'x.errorMessage = x.errorMessage === "Could not join server. You are connected to a VPN or proxy. Please disconnect from it and refresh the page." ? "[Vape] You\'re IP banned (these probably don\'t exist now anyways)" : x.errorMessage;');
 
 	// DRAWING SETUP

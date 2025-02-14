@@ -49,8 +49,9 @@ function addDump(replacement, code) {
  * @param {string} text 
  */
 function modifyCode(text) {
+	let modifiedText = text;
 	for(const [name, regex] of Object.entries(dumpedVarNames)) {
-		const matched = text.match(regex);
+		const matched = modifiedText.match(regex);
 		if (matched) {
 			for(const [replacement, code] of Object.entries(replacements)){
 				delete replacements[replacement];
@@ -58,15 +59,14 @@ function modifyCode(text) {
 			}
 		}
 	}
-	const unmatchedDumps = Object.entries(dumpedVarNames).filter(e => !text.match(e[1]));
+	const unmatchedDumps = Object.entries(dumpedVarNames).filter(e => !modifiedText.match(e[1]));
 	if (unmatchedDumps.length > 0) console.warn("Unmatched dumps:", unmatchedDumps);
 
-	const unmatchedReplacements = Object.entries(replacements).filter(r => text.replace(r[0]) === text);
+	const unmatchedReplacements = Object.entries(replacements).filter(r => modifiedText.replace(r[0]) === text);
 	if (unmatchedReplacements.length > 0) console.warn("Unmatched replacements:", unmatchedReplacements);
 
-	let modifiedText = text;
 	for(const [replacement, code] of Object.entries(replacements)) {
-		modifiedText = text.replace(replacement, code[1] ? code[0] : replacement + code[0]);
+		modifiedText = modifiedText.replace(replacement, code[1] ? code[0] : replacement + code[0]);
 		// TODO: handle the 2nd occurrence, which inside a string in a varible called "jsContent".
 		// (screw you vector)
 	}

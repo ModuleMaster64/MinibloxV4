@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Vape V4
 // @namespace    http://7granddadpgn.github.io
-// @version      2024-07-29
+// @version      3.0.0
 // @description  A browser script made to give enhancements on Miniblox
 // @author       7GrandDad
 // @match        https://miniblox.io/*

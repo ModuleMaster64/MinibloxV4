@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Vape V4
 // @namespace    http://7granddadpgn.github.io
-// @version      3.0.2
+// @version      3.0.3
 // @description  A browser script made to give enhancements on Miniblox
 // @author       7GrandDad
 // @match        https://miniblox.io/*
@@ -12,7 +12,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
-// @require      https://codeberg.org/RealPacket/VapeForMiniblox/raw/tag/3.0.1/injection.js#sha256=c7347f724af1204fc9e1d2dde6d93aba6f169d372b9207dfaf53378086e56b18
+// @require      https://codeberg.org/RealPacket/VapeForMiniblox/raw/tag/3.0.1/injection.js#sha256=4a3528d2e424dbc1e4266c01eb3bcabfdcca523eeb5ca301e6c72c756e54de69
 // @run-at       document-start
 // ==/UserScript==
 

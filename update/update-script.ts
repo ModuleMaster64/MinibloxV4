@@ -7,9 +7,9 @@
  * - pushes the changes
 */
 
-// import { simpleGit } from "simple-git";
+import { simpleGit } from "simple-git";
 
-// const git = simpleGit();
+const git = simpleGit();
 const splitted = import.meta.dirname?.split("/");
 splitted?.pop();
 const baseDirPath = splitted?.join("/");
@@ -64,8 +64,8 @@ await Deno.writeTextFile(
 	})
 );
 
-// git
-// 	.add([injectionPath, mainPath])
-// 	.commit(`release!: ${version}`)
-// 	.addTag(`v${version}`)
-// 	.push();
+git
+	.add([injectionPath, mainPath])
+	.commit(`release!: ${version}`)
+	.addTag(`v${version}`)
+	.push();

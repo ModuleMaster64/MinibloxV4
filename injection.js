@@ -319,7 +319,8 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	// NOSLOWDOWN
 	addModification('updatePlayerMoveState(),this.isUsingItem()', 'updatePlayerMoveState(),(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
 	addModification('S&&!this.isUsingItem()', 'S&&!(this.isUsingItem() && !enabledModules["NoSlowdown"])', true);
-	addModification('0),this.sneak', ' && !enabledModules["NoSlowdown"]');
+	// TODO: fix this
+	// addModification('0),this.sneak', ' && !enabledModules["NoSlowdown"]');
 
 	// STEP
 	addModification('p.y=this.stepHeight;', 'p.y=(enabledModules["Step"]?Math.max(stepheight[1],this.stepHeight):this.stepHeight);', true);

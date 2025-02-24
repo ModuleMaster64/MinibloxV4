@@ -297,7 +297,7 @@ function modifyCode(text) {
 	`);
 
 	// KEEPSPRINT
-	addModification('g>0&&(h.addVelocity(-Math.sin(this.yaw)*g*.5,.1,-Math.cos(this.yaw)*g*.5),this.motion.x*=.6,this.motion.z*=.6,this.setSprinting(!1)),', `
+	addModification('g>0&&h.addVelocity(-Math.sin(this.yaw)*g*.5,.1,-Math.cos(this.yaw)*g*.5)', `
 		if (g > 0) {
 h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 			if (this != player || !enabledModules["KeepSprint"]) {

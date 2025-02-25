@@ -869,7 +869,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
                             const dir = getMoveDirection(flyticks <= 0 ? 0.26 : flyvalue[1]);
 						    player.motion.x = dir.x;
 						    player.motion.z = dir.z;
-						    player.motion.y = flyticks > 3 ? 0 : player.motion.y;
+						    player.motion.y = flyticks >= 1 ? 0 : player.motion.y;
                         }
 
                         if (setticks > 0) {

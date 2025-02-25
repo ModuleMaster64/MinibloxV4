@@ -892,37 +892,34 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
             flytick = fly.addoption("Ticks", Number, 6);
 			flyvert = fly.addoption("Vertical", Number, 0.7);
 
-			let jumpflyvalue, jumpflyvert, jumpFlyUpMotion, jumpFlyGlide;
-			// JumpFly
-			const jumpfly = new Module("JumpFly", function(callback) {
+			// InfiniteFly
+			let infiniteFlyVert;
+			const infiniteFly = new Module("InfiniteFly", function(callback) {
 				if (callback) {
 					let ticks = 0;
-					tickLoop["JumpFly"] = function() {
+					tickLoop["InfiniteFly"] = function() {
 						ticks++;
-						const dir = getMoveDirection(jumpflyvalue[1]);
+						const dir = getMoveDirection(0.2);
 						player.motion.x = dir.x;
 						player.motion.z = dir.z;
 						const goUp = keyPressedDump("space");
 						const goDown = keyPressedDump("shift");
 						if (goUp || goDown) {
-							player.motion.y = goUp ? jumpflyvert[1] : -jumpflyvert[1];
+							player.motion.y = goUp ? infiniteFlyVert[1] : -infiniteFlyVert[1];
 						} else {
-							player.motion.y = (ticks < 18 && ticks % 6 < 4 ? jumpFlyUpMotion[1] : jumpFlyGlide[1]);
+							player.motion.y = 0;
 						}
 					};
 				}
 				else {
-					delete tickLoop["JumpFly"];
+					delete tickLoop["InfiniteFly"];
 					if (player) {
 						player.motion.x = Math.max(Math.min(player.motion.x, 0.3), -0.3);
 						player.motion.z = Math.max(Math.min(player.motion.z, 0.3), -0.3);
 					}
 				}
 			});
-			jumpflyvalue = jumpfly.addoption("Speed", Number, 2);
-			jumpFlyGlide = jumpfly.addoption("GlideValue", Number, -0.27);
-			jumpFlyUpMotion = jumpfly.addoption("UpMotion", Number, 4);
-			jumpflyvert = jumpfly.addoption("Vertical", Number, 0.27);
+			infiniteFlyVert = infiniteFly.addoption("Vertical", Number, 0.3);
 
 			new Module("InvWalk", function() {});
 			new Module("KeepSprint", function() {});

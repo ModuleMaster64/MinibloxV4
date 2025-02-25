@@ -938,8 +938,8 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 						const oldMotion = new Vector3$1(player.motion.x, 0, player.motion.z);
 						const dir = getMoveDirection(Math.max(oldMotion.length(), speedvalue[1]));
 						lastjump = player.onGround ? 0 : lastjump;
-						//player.motion.x = dir.x;
-						//player.motion.z = dir.z;
+						player.motion.x = dir.x;
+						player.motion.z = dir.z;
 						player.motion.y = player.onGround && dir.length() > 0 && speedauto[1] && !keyPressedDump("space") ? speedjump[1] : player.motion.y;
 					};
 				}

@@ -667,7 +667,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 					let ticks = 0;
 					tickLoop["AntiFall"] = function() {
         				const ray = rayTraceBlocks(player.getEyePos(), player.getEyePos().clone().setY(0), false, false, false, game.world);
-						if (player.fallDistance > 2.8 && !ray) {
+						if (!ray) {
 							player.motion.y = 0;
 						}
 					};
@@ -846,7 +846,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 			}
 
 			// Fly
-			let flyvalue, flyvert, flybypass, flytimer, flytick, funny;
+			let flyvalue, flyvert, flyEndMotion, flyMultiplier, flytimer, flytick, funny;
 			const fly = new Module("Fly", function(callback) {
                 reloadTickLoop(callback ? 50 / flytimer[1] : 50);
 				if (callback) {
@@ -866,10 +866,10 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
                         if (flyticks > 0) {
                             flyticks--;
                             setticks = 3;
-                            const dir = getMoveDirection(flyticks <= 0 ? 0.26 : flyvalue[1]);
+                            const dir = getMoveDirection(flyticks <= 0 ? 0.26 : (flyvalue[1] * (ticks * flyMultiplier[1])));
 						    player.motion.x = dir.x;
 						    player.motion.z = dir.z;
-						    player.motion.y = flyticks >= 1 ? 0 : player.motion.y;
+						    player.motion.y = flyticks >= 1 ? 0 : player.motion.y + flyEndMotion[1];
                         }
 
                         if (setticks > 0) {
@@ -885,7 +885,8 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 					}
 				}
 			});
-			flybypass = fly.addoption("Bypass", Boolean, true);
+			flyMultiplier = fly.addoption("Multiplier", Number, 1.15);
+			flyEndMotion = fly.addoption("EndMotion", Number, 1.15);
 			flyvalue = fly.addoption("Speed", Number, 2);
             flytimer = fly.addoption("Timer", Number, 0.5);
             flytick = fly.addoption("Ticks", Number, 6);

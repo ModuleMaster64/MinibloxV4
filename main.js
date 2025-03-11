@@ -12,7 +12,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
-// @require      https://codeberg.org/RealPacket/VapeForMiniblox/raw/tag/3.0.5/injection.js#sha256=ea6271006b9cb45c4e89a5270b807c94d623d0d6092c7fff75de1db61d3d673b
+// @require      https://codeberg.org/RealPacket/VapeForMiniblox/raw/tag/3.0.5/injection.js#sha256=0315c01c380cb2db15565a3adda06968a5ab62593d889d5ad61c871ed64172ff
 // @run-at       document-start
 // ==/UserScript==
 

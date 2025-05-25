@@ -160,7 +160,7 @@ function modifyCode(text) {
 	addModification('skinManager.loadTextures(),', ',this.loadVape(),');
 	addModification('async loadSpritesheet(){', `
 		async loadVape() {
-			this.vapeTexture = await this.loader.loadAsync("${corsMoment("https://codeberg.org/RealPacket/VapeForMiniblox/raw/branch/main/assets/logo.png")}");
+			this.vapeTexture = await this.loader.loadAsync("${corsMoment("https://codeberg.org/ee6-lang/CookForMiniblox/raw/branch/main/assets/cooking.png")}");
 			this.v4Texture = await this.loader.loadAsync("${corsMoment("https://codeberg.org/RealPacket/VapeForMiniblox/raw/branch/main/assets/logov4.png")}");
 		}
 		async loadSpritesheet(){

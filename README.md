@@ -1,2 +1,2 @@
-# Vape V4
-A performance enhancing tampermonkey script designed to improve the user experience!
+# COOK V4
+A Tampermonkey Script That Improves Miniblox! (by bypassing anticheat LOL)

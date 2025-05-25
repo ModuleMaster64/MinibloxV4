@@ -1,13 +1,12 @@
 // ==UserScript==
-// @name         Vape V4
-// @namespace    http://7granddadpgn.github.io
+// @name         COOK V4
+// @namespace    http://codeberg.org/ee6-lang
 // @version      3.0.6
-// @description  A browser script made to give enhancements on Miniblox
-// @author       7GrandDad
+// @description  A browser script made to give huge enhancements on Miniblox!
+// @author       ee6-lang, 7GrandDad
 // @match        https://miniblox.io/*
 // @match        https://miniblox.org/*
 // @match        https://miniblox.online/*
-// @match        https://bloxbattles.io/*
 // @icon         https://miniblox.io/favicon.png
 // @grant        GM_getValue
 // @grant        GM_setValue

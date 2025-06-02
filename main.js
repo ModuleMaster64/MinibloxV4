@@ -5,13 +5,10 @@
 // @description  A browser script made to give huge enhancements on Miniblox!
 // @author       ee6-lang, 7GrandDad
 // @match        https://miniblox.io/*
-// @match        https://miniblox.org/*
-// @match        https://miniblox.online/*
 // @icon         https://miniblox.io/favicon.png
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
-// @require      https://codeberg.org/RealPacket/VapeForMiniblox/raw/tag/3.0.6/injection.js#sha256=a50e0b233ad7b1a61f4cbbf352ac3ab07fd356e01fe8615c90755eb9ae51227e
 // @run-at       document-start
 // ==/UserScript==
 

@@ -1070,89 +1070,165 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 
 
 			function getPossibleSides(pos) {
-				for(const side of EnumFacing.VALUES) {
-					const state = game.world.getBlockState(pos.add(side.toVector().x, side.toVector().y, side.toVector().z));
-					if (state.getBlock().material != Materials.air) return side.getOpposite();
-				}
-			}
+    const possibleSides = [];
+    for (const side of EnumFacing.VALUES) {
+        const offset = side.toVector();
+        const state = game.world.getBlockState(pos.add(offset.x, offset.y, offset.z));
+        if (state.getBlock().material !== Materials.air) {
+            possibleSides.push(side.getOpposite());
+        }
+    }
+    return possibleSides.length > 0 ? possibleSides[0] : null;
+}
 
-			function switchSlot(slot) {
-				player.inventory.currentItem = slot;
-				game.info.selectedSlot = slot;
-			}
+function switchSlot(slot) {
+    player.inventory.currentItem = slot;
+    game.info.selectedSlot = slot;
+}
 
-			let scaffoldtower, oldHeld, scaffoldextend;
-			const scaffold = new Module("Scaffold", function(callback) {
-				if (callback) {
-					if (player) oldHeld = game.info.selectedSlot;
-					tickLoop["Scaffold"] = function() {
-						for(let i = 0; i < 9; i++) {
-							const item = player.inventory.main[i];
-							if (item && item.item instanceof ItemBlock && item.item.block.getBoundingBox().max.y == 1 && item.item.name != "tnt") {
-								switchSlot(i);
-								break;
-							}
-						}
+let scaffoldtower, oldHeld, scaffoldextend, strictY;
 
-						const item = player.inventory.getCurrentItem();
-						if (item && item.getItem() instanceof ItemBlock) {
-							let placeSide;
-							let pos = new BlockPos(player.pos.x, player.pos.y - 1, player.pos.z);
-							if (game.world.getBlockState(pos).getBlock().material == Materials.air) {
-								placeSide = getPossibleSides(pos);
-								if (!placeSide) {
-									let closestSide, closestPos;
-									let closest = 999;
-									for(let x = -5; x < 5; ++x) {
-										for (let z = -5; z < 5; ++z) {
-											const newPos = new BlockPos(pos.x + x, pos.y, pos.z + z);
-											const checkNearby = getPossibleSides(newPos);
-											if (checkNearby) {
-												const newDist = player.pos.distanceTo(new Vector3$1(newPos.x, newPos.y, newPos.z));
-												if (newDist <= closest) {
-													closest = newDist;
-													closestSide = checkNearby;
-													closestPos = newPos;
-												}
-											}
-										}
-									}
+const scaffold = new Module("Scaffold", function(callback) {
+    if (callback) {
+        if (player) oldHeld = game.info.selectedSlot;
 
-									if (closestPos) {
-										pos = closestPos;
-										placeSide = closestSide;
-									}
-								}
-							}
+        tickLoop["Scaffold"] = function() {
+            // 🔄 Auto-select valid block
+            for (let i = 0; i < 9; i++) {
+                const item = player.inventory.main[i];
+                if (
+                    item &&
+                    item.item instanceof ItemBlock &&
+                    item.item.block.getBoundingBox().max.y === 1 &&
+                    item.item.name !== "tnt"
+                ) {
+                    switchSlot(i);
+                    break;
+                }
+            }
 
-							if (placeSide) {
-								const dir = placeSide.getOpposite().toVector();
-								const newDir = placeSide.toVector();
-								const placeX = pos.x + dir.x;
-								const placeZ = pos.z + dir.z;
-								// for (let extendX = 0; extendX < scaffoldextend[1]; extendX++) {
-								// 	console.info("ExtendX:", extendX);
-								// }
-								const placePosition = new BlockPos(placeX, keyPressedDump("shift") ? pos.y - (dir.y + 2) : pos.y + dir.y, placeZ);
-								const hitVec = new Vector3$1(placePosition.x + (newDir.x != 0 ? Math.max(newDir.x, 0) : Math.random()), placePosition.y + (newDir.y != 0 ? Math.max(newDir.y, 0) : Math.random()), placePosition.z + (newDir.z != 0 ? Math.max(newDir.z, 0) : Math.random()));
-								if (scaffoldtower[1] && keyPressedDump("space") && dir.y == -1 && player.motion.y < 0.2 && player.motion.y > 0.15) player.motion.y = 0.42;
-								if (keyPressedDump("shift") && dir.y == 1 && player.motion.y > -0.2 && player.motion.y < -0.15) player.motion.y = -0.42;
-								if (playerControllerDump.onPlayerRightClick(player, game.world, item, placePosition, placeSide, hitVec)) hud3D.swingArm();
-								if (item.stackSize == 0) {
-									player.inventory.main[player.inventory.currentItem] = null;
-									return;
-								}
-							}
-						}
-					}
-				}
-				else {
-					if (player && oldHeld != undefined) switchSlot(oldHeld);
-					delete tickLoop["Scaffold"];
-				}
-			});
-			scaffoldtower = scaffold.addoption("Tower", Boolean, true);
-			// scaffoldextend = scaffold.addoption("Extend", Number, 0);
+            const item = player.inventory.getCurrentItem();
+            if (!item || !(item.getItem() instanceof ItemBlock)) return;
+
+            // Use floored positions for reliability when towering
+            let flooredX = Math.floor(player.pos.x);
+            let flooredY = Math.floor(player.pos.y);
+            let flooredZ = Math.floor(player.pos.z);
+            let pos = new BlockPos(flooredX, flooredY - 1, flooredZ);
+
+            if (game.world.getBlockState(pos).getBlock().material === Materials.air) {
+                let placeSide = getPossibleSides(pos);
+
+                if (!placeSide) {
+                    let closestSide = null;
+                    let closestPos = null;
+                    let closestDist = Infinity;
+
+                    for (let x = -5; x <= 5; x++) {
+                        for (let z = -5; z <= 5; z++) {
+                            const newPos = new BlockPos(pos.x + x, pos.y, pos.z + z);
+                            const side = getPossibleSides(newPos);
+
+                            if (side) {
+                                const dist = player.pos.distanceTo(new Vector3$1(newPos.x, newPos.y, newPos.z));
+                                if (dist < closestDist) {
+                                    closestDist = dist;
+                                    closestSide = side;
+                                    closestPos = newPos;
+                                }
+                            }
+                        }
+                    }
+
+                    if (closestPos) {
+                        pos = closestPos;
+                        placeSide = closestSide;
+                    }
+                }
+
+                if (placeSide) {
+                    const dir = placeSide.getOpposite().toVector();
+                    const newDir = placeSide.toVector();
+
+                    let offsetX = dir.x;
+                    let offsetY = dir.y;
+                    let offsetZ = dir.z;
+
+                    if (scaffoldextend[1] > 0) {
+                        offsetX *= scaffoldextend[1];
+                        offsetZ *= scaffoldextend[1];
+                    }
+
+                    const placeX = pos.x + offsetX;
+                    const placeY = keyPressedDump("shift")
+                        ? pos.y - (dir.y + 2)
+                        : pos.y + dir.y;
+                    const placeZ = pos.z + offsetZ;
+
+                    const placePosition = new BlockPos(placeX, placeY, placeZ);
+
+                    // ✅ STRONG center hitVec (StrictY compatible)
+                    const hitVec = new Vector3$1(
+                        placePosition.x + 0.5,
+                        strictY[1] ? placePosition.y + 0.5 : placePosition.y + (newDir.y !== 0 ? Math.max(newDir.y, 0) : Math.random()),
+                        placePosition.z + 0.5
+                    );
+
+                    // 🎯 Auto-Rotation (must match hitVec precisely)
+                    const dx = hitVec.x - player.pos.x;
+                    const dy = hitVec.y - (player.pos.y + player.getEyeHeight());
+                    const dz = hitVec.z - player.pos.z;
+                    const distHorizontal = Math.sqrt(dx * dx + dz * dz);
+
+                    const rotYaw = Math.atan2(dz, dx) * (180 / Math.PI) - 90;
+                    const rotPitch = -Math.atan2(dy, distHorizontal) * (180 / Math.PI);
+                    player.rotationYaw = rotYaw;
+                    player.rotationPitch = Math.max(-90, Math.min(90, rotPitch));
+
+                    // 🏰 Tower boost (more reliable, only if exactly above a block)
+                    if (
+                        scaffoldtower[1] &&
+                        keyPressedDump("space") &&
+                        dir.y === -1 &&
+                        Math.abs(player.pos.x - flooredX - 0.5) < 0.2 &&
+                        Math.abs(player.pos.z - flooredZ - 0.5) < 0.2
+                    ) {
+                        if (player.motion.y < 0.2 && player.motion.y > 0.15) {
+                            player.motion.y = 0.42;
+                        }
+                    }
+
+                    // ⬇️ Sneak down
+                    if (keyPressedDump("shift") && dir.y === 1) {
+                        if (player.motion.y > -0.2 && player.motion.y < -0.15) {
+                            player.motion.y = -0.42;
+                        }
+                    }
+
+                    // 🧱 Place block
+                    if (playerControllerDump.onPlayerRightClick(player, game.world, item, placePosition, placeSide, hitVec)) {
+                        hud3D.swingArm();
+                    }
+
+                    // 🧼 Remove zero stack
+                    if (item.stackSize === 0) {
+                        player.inventory.main[player.inventory.currentItem] = null;
+                    }
+                }
+            }
+        };
+    } else {
+        if (player && oldHeld !== undefined) {
+            switchSlot(oldHeld);
+        }
+        delete tickLoop["Scaffold"];
+    }
+});
+
+// 🔧 OPTIONS
+scaffoldtower = scaffold.addoption("Tower", Boolean, true);
+scaffoldextend = scaffold.addoption("Extend", Number, 1);
+strictY = scaffold.addoption("StrictY", Boolean, true); // ✅ Server-safe center hitVec toggle
 
 			let timervalue;
 			const timer = new Module("Timer", function(callback) {

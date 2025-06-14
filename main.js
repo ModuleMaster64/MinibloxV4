@@ -3,7 +3,7 @@
 // @namespace    http://codeberg.org/ee6-lang
 // @version      3.0.6
 // @description  A browser script made to give huge enhancements on Miniblox!
-// @author       ee6-lang, 7GrandDad
+// @author       ee6-lang, 7GrandDad, RealPacket
 // @match        https://miniblox.io/*
 // @icon         https://miniblox.io/favicon.png
 // @grant        GM_getValue

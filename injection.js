@@ -1258,69 +1258,145 @@ strictY = scaffold.addoption("StrictY", Boolean, true); // ✅ Server-safe cente
 	playerControllerDump.windowClickDump(player.openContainer.windowId, -999, 0, 0, player);
 }
 
-const AutoDrop = new Module("AutoDrop", function(callback) {
-	if (callback) {
-		let dropVisuals = [];
-		const keptTypes = new Set();
+const AutoDrop = new Module("AutoDrop", function (callback) {
+    if (!callback) {
+        delete tickLoop["AutoDrop"];
+        hud3D.remove("AutoDropOverlay");
+        return;
+    }
 
-		tickLoop["AutoDrop"] = function() {
-			dropVisuals = [];
-			if (!player.openContainer || player.openContainer !== player.inventoryContainer) return;
+    let dropVisuals = new Map();
+    let dropTypeMap = new Map();
+    const bestArmor = {};
+    let lastRun = 0;
 
-			const slots = player.inventoryContainer.inventorySlots;
+    const weaponClasses = new Set(["ItemSword", "ItemAxe", "ItemBow", "ItemPickaxe"]);
+    const essentialsKeywords = ["gapple", "golden apple", "ender pearl", "fire charge"];
 
-			for (let i = 0; i < 36; i++) {
-				const slot = slots[i];
-				if (!slot || !slot.getHasStack()) continue;
+    const armorMaterialPriority = ["leather", "chain", "iron", "diamond"];
+    const customArmorKeepList = ["god helmet", "legend boots"];
 
-				const stack = slot.getStack();
-				const item = stack.getItem();
-				const name = stack.getDisplayName().toLowerCase();
+    function getArmorScore(stack) {
+        const item = stack.getItem();
+        const material = item.getArmorMaterial?.()?.toLowerCase?.() || "unknown";
+        const materialIndex = armorMaterialPriority.indexOf(material);
+        const materialScore = materialIndex === -1 ? -999 : materialIndex * 1000;
 
-				const typeKey = item.constructor.name + (item instanceof ItemArmor ? "_" + item.armorType : "");
+        const durabilityScore = stack.getMaxDamage() - stack.getItemDamage();
+        return materialScore + durabilityScore;
+    }
 
-				// Keep special items
-				if (
-					name.includes("gapple") ||
-					name.includes("golden apple") ||
-					name.includes("ender pearl") ||
-					name.includes("fire charge")
-				) continue;
+    tickLoop["AutoDrop"] = function () {
+        const now = Date.now();
+        if (now - lastRun < 100) return;
+        lastRun = now;
 
-				// Block logic — drop if stack < 5
-				if (item instanceof ItemBlock) {
-					if (stack.stackSize >= 5) continue; // keep good stacks
-					dropSlot(i);
-					dropVisuals.push(i);
-					continue;
-				}
+        const keptTypes = new Set();
+        const toDrop = [];
 
-				// First of a type is kept
-				if (!keptTypes.has(typeKey)) {
-					keptTypes.add(typeKey);
-					continue;
-				}
+        if (!player.openContainer || player.openContainer !== player.inventoryContainer) return;
+        const slots = player.inventoryContainer.inventorySlots;
+        if (!slots || slots.length < 36) return;
 
-				// Duplicate non-block → drop
-				dropSlot(i);
-				dropVisuals.push(i);
-			}
+        Object.keys(bestArmor).forEach(k => delete bestArmor[k]);
 
-			keptTypes.clear();
-		};
+        [5, 6, 7, 8].forEach(i => {
+            const slot = slots[i];
+            if (!slot?.getHasStack()) return;
+            const stack = slot.getStack();
+            if (!(stack.getItem() instanceof ItemArmor)) return;
+            const armorType = stack.getItem().armorType ?? "unknown";
+            bestArmor["armor_" + armorType] = { stack, index: i };
+        });
 
-		hud3D.add("AutoDropOverlay", () => {
-			for (const slot of dropVisuals) {
-				const x = (slot % 9) * 20 + 10;
-				const y = Math.floor(slot / 9) * 20 + 60;
-				drawImage("spritesheet.png", 32, 32, 16, 16, x, y, 16, 16, "rgba(255,0,0,0.6)");
-			}
-		});
-	} else {
-		delete tickLoop["AutoDrop"];
-		hud3D.remove("AutoDropOverlay");
-	}
+        for (let i = 0; i < 36; i++) {
+            const slot = slots[i];
+            if (!slot?.getHasStack()) continue;
+
+            const stack = slot.getStack();
+            const item = stack.getItem();
+            const name = stack.getDisplayName().toLowerCase();
+
+            if (essentialsKeywords.some(k => name.includes(k))) continue;
+            if (customArmorKeepList.some(k => name.includes(k))) continue;
+
+            if (item instanceof ItemBlock) {
+                if (stack.stackSize < 5) {
+                    toDrop.push(i);
+                    dropTypeMap.set(i, "block");
+                }
+                continue;
+            }
+
+            if (item instanceof ItemArmor) {
+                const armorType = item.armorType ?? "unknown";
+                const key = "armor_" + armorType;
+                const score = getArmorScore(stack);
+                const existing = bestArmor[key];
+                const existingScore = existing ? getArmorScore(existing.stack) : -1;
+
+                if (!existing || score > existingScore) {
+                    if (existing && existing.index !== i) {
+                        toDrop.push(existing.index);
+                        dropTypeMap.set(existing.index, "worse_armor");
+                    }
+                    bestArmor[key] = { stack, index: i };
+                } else {
+                    toDrop.push(i);
+                    dropTypeMap.set(i, "armor_dupe");
+                }
+                continue;
+            }
+
+            const className = item.constructor.name;
+            if (weaponClasses.has(className)) {
+                if (!keptTypes.has(className)) {
+                    keptTypes.add(className);
+                } else {
+                    toDrop.push(i);
+                    dropTypeMap.set(i, "weapon_dupe");
+                }
+                continue;
+            }
+
+            toDrop.push(i);
+            dropTypeMap.set(i, "junk");
+        }
+
+        toDrop.forEach(slot => {
+            dropSlot(slot);
+            dropVisuals.set(slot, now);
+        });
+
+        if (now % 1000 < 100) {
+            dropVisuals.forEach((time, slot) => {
+                if (now - time > 500) dropVisuals.delete(slot);
+            });
+        }
+    };
+
+    hud3D.add("AutoDropOverlay", function () {
+        dropVisuals.forEach((_, slot) => {
+            const x = (slot % 9) * 20 + 10;
+            const y = Math.floor(slot / 9) * 20 + 60;
+            const type = dropTypeMap.get(slot) || "junk";
+
+            let color = "rgba(255,0,0,0.6)";
+            if (type === "block") color = "rgba(128,128,128,0.6)";
+            else if (type === "armor_dupe") color = "rgba(255,255,0,0.6)";
+            else if (type === "worse_armor") color = "rgba(255,165,0,0.6)";
+            else if (type === "weapon_dupe") color = "rgba(0,255,255,0.6)";
+
+            drawImage("spritesheet.png", 32, 32, 16, 16, x, y, 16, 16, color);
+        });
+    });
 });
+
+function dropSlot(index) {
+    playerControllerDump.windowClickDump(player.openContainer.windowId, index, 0, 0, player);
+    playerControllerDump.windowClickDump(player.openContainer.windowId, -999, 0, 0, player);
+}
+
 let funnyMessages = [
     "Sent back to the lobby—don't trip on the way out! 🏃💨",
     "Was that your best? Miniblox says no. 🚫",

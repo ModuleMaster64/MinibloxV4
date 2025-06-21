@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COOK V4
 // @namespace    http://codeberg.org/ee6-lang
-// @version      3.0.6
+// @version      3.0.7
 // @description  A browser script made to give huge enhancements on Miniblox!
 // @author       ee6-lang, 7GrandDad, RealPacket
 // @match        https://miniblox.io/*

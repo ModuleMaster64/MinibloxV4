@@ -1465,7 +1465,8 @@ let funnyMessages = [
     "You just made the blooper reel. 🎞️",
     "I could do this all day. ⏳",
 	"Im using __________ 4532353",
-	"wow :moneymouth:
+	"wow :moneymouth:",
+	"[Server] banned player due to suspicious behaviour :moneymouth:"
 ];
 
 const AutoFunnyChat = new Module("AutoFunnyChat", function(callback) {

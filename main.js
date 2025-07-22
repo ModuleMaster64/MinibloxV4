@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         COOK V4
-// @namespace    http://codeberg.org/ee6-lang 
-// @version      3.0.7
+// @name         MINIBLOX v4
+// @namespace    http://7granddadpgn.github.io
+// @version      v3.11
 // @description  A browser script made to give huge enhancements on Miniblox!
-// @author       ee6-lang (or new name ModuleMaster64), 7GrandDad, RealPacket
-// @match        https://miniblox.io/*
+// @author       7GrandDad, ModuleM64, RealPacket, ProgMEM-CC, he557
+// @match        https://miniblox.io/
 // @icon         https://miniblox.io/favicon.png
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -55,4 +55,3 @@
 		});
 	}
 })();
-*/

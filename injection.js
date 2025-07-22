@@ -5,7 +5,7 @@ let replacements = {};
 let dumpedVarNames = {};
 const storeName = "a" + crypto.randomUUID().replaceAll("-", "").substring(16);
 const vapeName = crypto.randomUUID().replaceAll("-", "").substring(16);
-const VERSION = "3.0.7";
+const VERSION = "3.11";
 
 // ANTICHEAT HOOK
 function replaceAndCopyFunction(oldFunc, newFunc) {

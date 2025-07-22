@@ -1223,37 +1223,31 @@ strictY = scaffold.addoption("StrictY", Boolean, true); // ✅ Server-safe cente
 	playerControllerDump.windowClickDump(player.openContainer.windowId, -999, 0, 0, player);
 }
 
-const AutoDrop = new Module("AutoDrop", function (callback) {
+const InvCleaner = new Module("InvCleaner", function (callback) {
     if (!callback) {
-        delete tickLoop["AutoDrop"];
-        hud3D.remove("AutoDropOverlay");
+        delete tickLoop["InvCleaner"];
         return;
     }
 
-    let dropVisuals = new Map();
-    let dropTypeMap = new Map();
     const bestArmor = {};
-    let lastRun = 0;
-
     const weaponClasses = new Set(["ItemSword", "ItemAxe", "ItemBow", "ItemPickaxe"]);
     const essentialsKeywords = ["gapple", "golden apple", "ender pearl", "fire charge"];
-
     const armorMaterialPriority = ["leather", "chain", "iron", "diamond"];
     const customArmorKeepList = ["god helmet", "legend boots"];
+    let lastRun = 0;
 
     function getArmorScore(stack) {
         const item = stack.getItem();
         const material = item.getArmorMaterial?.()?.toLowerCase?.() || "unknown";
         const materialIndex = armorMaterialPriority.indexOf(material);
         const materialScore = materialIndex === -1 ? -999 : materialIndex * 1000;
-
         const durabilityScore = stack.getMaxDamage() - stack.getItemDamage();
         return materialScore + durabilityScore;
     }
 
-    tickLoop["AutoDrop"] = function () {
+    tickLoop["InvCleaner"] = function () {
         const now = Date.now();
-        if (now - lastRun < 100) return;
+        if (now - lastRun < 45) return;
         lastRun = now;
 
         const keptTypes = new Set();
@@ -1288,7 +1282,6 @@ const AutoDrop = new Module("AutoDrop", function (callback) {
             if (item instanceof ItemBlock) {
                 if (stack.stackSize < 5) {
                     toDrop.push(i);
-                    dropTypeMap.set(i, "block");
                 }
                 continue;
             }
@@ -1301,14 +1294,10 @@ const AutoDrop = new Module("AutoDrop", function (callback) {
                 const existingScore = existing ? getArmorScore(existing.stack) : -1;
 
                 if (!existing || score > existingScore) {
-                    if (existing && existing.index !== i) {
-                        toDrop.push(existing.index);
-                        dropTypeMap.set(existing.index, "worse_armor");
-                    }
+                    if (existing && existing.index !== i) toDrop.push(existing.index);
                     bestArmor[key] = { stack, index: i };
                 } else {
                     toDrop.push(i);
-                    dropTypeMap.set(i, "armor_dupe");
                 }
                 continue;
             }
@@ -1319,42 +1308,15 @@ const AutoDrop = new Module("AutoDrop", function (callback) {
                     keptTypes.add(className);
                 } else {
                     toDrop.push(i);
-                    dropTypeMap.set(i, "weapon_dupe");
                 }
                 continue;
             }
 
             toDrop.push(i);
-            dropTypeMap.set(i, "junk");
         }
 
-        toDrop.forEach(slot => {
-            dropSlot(slot);
-            dropVisuals.set(slot, now);
-        });
-
-        if (now % 1000 < 100) {
-            dropVisuals.forEach((time, slot) => {
-                if (now - time > 500) dropVisuals.delete(slot);
-            });
-        }
+        toDrop.forEach(dropSlot);
     };
-
-    hud3D.add("AutoDropOverlay", function () {
-        dropVisuals.forEach((_, slot) => {
-            const x = (slot % 9) * 20 + 10;
-            const y = Math.floor(slot / 9) * 20 + 60;
-            const type = dropTypeMap.get(slot) || "junk";
-
-            let color = "rgba(255,0,0,0.6)";
-            if (type === "block") color = "rgba(128,128,128,0.6)";
-            else if (type === "armor_dupe") color = "rgba(255,255,0,0.6)";
-            else if (type === "worse_armor") color = "rgba(255,165,0,0.6)";
-            else if (type === "weapon_dupe") color = "rgba(0,255,255,0.6)";
-
-            drawImage("spritesheet.png", 32, 32, 16, 16, x, y, 16, 16, color);
-        });
-    });
 });
 
 function dropSlot(index) {

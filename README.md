@@ -1,7 +1,6 @@
-# COOK V4
-A Tampermonkey Script That Improves Miniblox! (by bypassing anticheat LOL)
+# MINIBLOX V4
+A Tampermonkey Script That Improves Miniblox! (by bypassing an custom anticheat could be old versus? LOL)
 
-ONE OF THE BEST CLIENTS TO DATE WHICH STILL BYPASSES WITH GUI
+ONE OF THE BEST CLIENTS TO DATE WHICH STILL BYPASSES!
 
-
-Trying to make a desync for miniblox :D
+with clean CLICK GUI

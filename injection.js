@@ -1497,10 +1497,10 @@ const spiderclimb = new Module("SpiderClimb", function(callback) {
     };
 });
 
-spiderclimb.addoption("Cling Height", Number, 1.1);
+spiderclimb.addoption("Cling Height", Number, 1.4);
 spiderclimb.addoption("Enable Sneak Climb", Boolean, true);
-spiderclimb.addoption("Allow Air Cling", Boolean, false);
-spiderclimb.addoption("Climb Speed", Number, 0.32);
+spiderclimb.addoption("Allow Air Cling", Boolean, true);
+spiderclimb.addoption("Climb Speed", Number, 0.18);
 
 			globalThis.${storeName}.modules = modules;
 			globalThis.${storeName}.profile = "default";

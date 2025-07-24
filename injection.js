@@ -5,7 +5,7 @@ let replacements = {};
 let dumpedVarNames = {};
 const storeName = "a" + crypto.randomUUID().replaceAll("-", "").substring(16);
 const vapeName = crypto.randomUUID().replaceAll("-", "").substring(16);
-const VERSION = "3.18-dev";
+const VERSION = "3.20-dev";
 
 // ANTICHEAT HOOK
 function replaceAndCopyFunction(oldFunc, newFunc) {
@@ -1615,436 +1615,478 @@ spiderclimb.addoption("Climb Speed", Number, 0.18);
 	}
 })();
 (async function() {
-  // Load Minecraft font
-  const fontLink = document.createElement("link");
-  fontLink.href = "https://fonts.cdnfonts.com/css/minecraft-4";
-  fontLink.rel = "stylesheet";
-  document.head.appendChild(fontLink);
+  const THEMES = ["dark", "minecraft", "neon", "glass", "frame", "sunset", "ocean", "chrome", "terminal"];
+  const MODULE_CATEGORIES = {
+    Combat: ["aura", "reach", "velocity", "crit", "hit", "attack"],
+    Movement: ["fly", "speed", "step", "bhop", "sprint"],
+    Render: ["esp", "tracer", "fullbright", "nametag"],
+    Misc: ["autogg", "scaffold", "spammer", "inv", "chest", "timer"]
+  };
+  const CATEGORY_ICONS = { Combat: "⚔️", Movement: "🏃", Render: "👁️", Misc: "🧰" };
+  const GUI_ID = "clickGUI";
 
-  // Wait for modules
+  // ==[ Load Font + Styles ]==
+  const font = document.createElement("link");
+  font.href = "https://fonts.cdnfonts.com/css/minecraft-4";
+  font.rel = "stylesheet";
+  document.head.appendChild(font);
+
+  const style = document.createElement("style");
+  style.textContent = `
+    :root {
+      --bg: rgba(15,15,15,0.95);
+      --accent: lime;
+      --text: white;
+    }
+    #${GUI_ID} {
+      position: fixed; top: 100px; left: 100px;
+      width: 400px; max-height: 80vh; overflow-y: auto;
+      background: var(--bg); color: var(--text); font-family: monospace;
+      border: 2px solid var(--accent); padding: 12px;
+      border-radius: 10px; z-index: 999999; display: none;
+      box-shadow: 0 10px 20px #000b;
+      transition: all 0.3s ease;
+    }
+    #${GUI_ID} h2 {
+      text-align: center; font-size: 24px;
+      background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
+      background-size: 1400% 1400%;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: rainbowText 6s linear infinite;
+      user-select: none; cursor: move;
+    }
+    @keyframes rainbowText {
+      0% { background-position: 0% } 100% { background-position: 100% }
+    }
+    .module {
+      background: rgba(30,30,30,0.8);
+      border: 1px solid var(--accent);
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+    .module:hover {
+      transform: scale(1.01);
+      box-shadow: 0 0 8px var(--accent);
+    }
+    .toggle-btn {
+      float: right;
+      background: var(--accent); color: black;
+      border: none; padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .live-label {
+      float: right;
+      color: var(--accent);
+      font-size: 12px;
+    }
+    .option-line {
+      margin-top: 5px;
+      font-size: 13px;
+    }
+    input[type="range"], input[type="text"] {
+      width: 100%;
+    }
+    .drag-handle {
+      cursor: grab;
+      font-size: 14px;
+      opacity: 0.6;
+      position: absolute;
+      left: 6px; top: 6px;
+    }
+    #guiStats {
+      font-size: 12px;
+      color: var(--accent);
+      margin-top: 10px;
+      border-top: 1px dashed var(--accent);
+      padding-top: 6px;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ==[ Wait for Store ]==
   await new Promise(resolve => {
     const loop = setInterval(() => {
-      if (unsafeWindow.globalThis[storeName]?.modules) {
+      if (unsafeWindow?.globalThis?.[storeName]?.modules) {
         clearInterval(loop);
         resolve();
       }
-    }, 10);
+    }, 15);
   });
 
-  // Inject GUI
-  injectGUI(unsafeWindow.globalThis[storeName]);
+  const store = unsafeWindow.globalThis[storeName];
+  // ==[ Build GUI ]==
+  const gui = document.createElement("div");
+  gui.id = GUI_ID;
+  gui.innerHTML = `<h2 id="guiHeader">Massive GUI</h2>`;
+  document.body.appendChild(gui);
 
-  async function injectGUI(store) {
-    const moduleCategories = {
-      Combat: ["aura", "reach", "velocity", "crit", "hit", "attack"],
-      Movement: ["fly", "speed", "step", "bhop", "sprint"],
-      Render: ["esp", "tracer", "fullbright", "nametag"],
-      Misc: ["autogg", "scaffold", "spammer", "inv", "chest", "timer"]
-    };
-    const categoryIcons = { Combat: "⚔️", Movement: "🏃", Render: "👁️", Misc: "🧰" };
+  // ==[ Make GUI Draggable ]==
+  let dragging = false, offsetX = 0, offsetY = 0;
+  const header = gui.querySelector("#guiHeader");
+  header.onmousedown = e => {
+    dragging = true;
+    offsetX = e.clientX - gui.offsetLeft;
+    offsetY = e.clientY - gui.offsetTop;
+  };
+  document.onmouseup = () => (dragging = false);
+  document.onmousemove = e => {
+    if (dragging) {
+      gui.style.left = `${e.clientX - offsetX}px`;
+      gui.style.top = `${e.clientY - offsetY}px`;
+    }
+  };
 
-    // Styles including rainbow header & live slider labels
-    const style = document.createElement("style");
-    style.textContent = `
-      @keyframes rainbowText { 0% { background-position: 0% } 100% { background-position: 100% } }
-      #clickGUI { position: fixed; top:100px; left:100px; width:360px; max-height:80vh;
-        overflow-y:auto; background:rgba(15,15,15,0.95); color:white; font-family:monospace;
-        border:2px solid lime; padding:12px; border-radius:8px; z-index:999999; display:none; }
-      #clickGUI h2 { text-align:center; font-size:24px; font-weight:bold;
-        background:linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
-        background-size:1400% 1400%; -webkit-background-clip:text; color:transparent;
-        animation:rainbowText 6s linear infinite; cursor:move; }
-      .module { margin-bottom:10px; padding-bottom:6px; border-bottom:1px dashed #444; }
-      .toggle-btn { float:right; background:lime; color:black; border:none;
-        padding:2px 6px; border-radius:4px; cursor:pointer; font-weight:bold; }
-      .option-line { margin:4px 0; font-size:13px; position:relative; }
-      input[type="range"] { width:calc(100% - 40px); vertical-align:middle; }
-      input[type="text"] { width:100%; font-size:12px; }
-      .live-label { position:absolute; right:0; top:2px; font-size:12px; color:lime; }
-      #guiControls { margin-top:12px; text-align:center; }
-      button.control { background:black; color:lime; border:1px solid lime;
-        padding:5px 8px; margin:2px; cursor:pointer; font-family:monospace; border-radius:4px; }
-    `;
-    document.head.appendChild(style);
+  // ==[ Tab Buttons + Search ]==
+  const tabWrap = document.createElement("div");
+  tabWrap.style = "display:flex; gap:6px; margin:10px 0; justify-content:center;";
+  gui.appendChild(tabWrap);
 
-    // Notification container
-    const notifWrap = document.createElement("div");
-    notifWrap.style = `
-      position: fixed;
-      bottom: 40px;
-      right: 30px;
-      z-index: 1000000;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      pointer-events: none;
-    `;
-    document.body.appendChild(notifWrap);
+  const tabModules = {};
+  let currentTab = "Combat";
 
-    function showNotif(text) {
-  const notif = document.createElement("div");
-  notif.textContent = text;
-  notif.style = `
-    background: rgba(20,20,20,0.96);
-    color: lime;
-    font-family: monospace;
-    font-size: 16px;
-    margin-top: 8px;
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: 2px solid lime;
-    box-shadow: 0 2px 12px #000a;
-    opacity: 1;
-    transition: opacity 0.4s, transform 0.5s cubic-bezier(.23,1.29,.56,1.01);
-    transform: translateX(120%);
-    pointer-events: none;
+  for (const tabName of Object.keys(MODULE_CATEGORIES)) {
+    const btn = document.createElement("button");
+    btn.className = "toggle-btn";
+    btn.textContent = tabName;
+    btn.onclick = () => switchTab(tabName);
+    tabWrap.appendChild(btn);
+    tabModules[tabName] = [];
+  }
+
+  const searchBar = document.createElement("input");
+  searchBar.type = "text";
+  searchBar.placeholder = "🔍 Search modules...";
+  searchBar.style = `
+    width:100%; padding:4px 8px;
+    border:1px solid var(--accent); background:black; color:lime;
+    font-family:monospace; margin-bottom:10px;
   `;
-  notifWrap.appendChild(notif);
+  gui.appendChild(searchBar);
 
-  // Start slide-in after appending
-  setTimeout(() => { notif.style.transform = "translateX(0)"; }, 10);
-
-  setTimeout(() => { notif.style.opacity = 0; notif.style.transform = "translateX(120%)"; }, 4800);
-  setTimeout(() => { notif.remove(); }, 5200);
-}
-
-    // Build GUI
-    const gui = document.createElement("div");
-    gui.id = "clickGUI";
-    gui.innerHTML = `<h2 id="clickHeader">Massive GUI</h2>`;
-    document.body.appendChild(gui);
-
-    // Enable dragging
-    let dragging = false, offsetX = 0, offsetY = 0;
-    const header = gui.querySelector("#clickHeader");
-    header.onmousedown = e => {
-      dragging = true;
-      offsetX = e.clientX - gui.offsetLeft;
-      offsetY = e.clientY - gui.offsetTop;
-    };
-    document.onmouseup = () => (dragging = false);
-    document.onmousemove = e => {
-      if (dragging) {
-        gui.style.left = `${e.clientX - offsetX}px`;
-        gui.style.top = `${e.clientY - offsetY}px`;
-      }
-    };
-
-    // Prevent context menu
-    gui.oncontextmenu = e => e.preventDefault();
-
-    // Tabs & search bar
-    const tabWrap = document.createElement("div");
-    tabWrap.style = "display:flex; gap:6px; margin-bottom:10px; justify-content:center;";
-    gui.appendChild(tabWrap);
-
-    const searchBar = document.createElement("input");
-    searchBar.type = "text";
-    searchBar.placeholder = "🔍 Search modules...";
-    searchBar.style = `
-      width:calc(100% - 20px); margin:0 auto 10px; display:block;
-      padding:5px 8px; border:1px solid lime; background:black; color:lime; font-family:monospace;
-    `;
-    gui.appendChild(searchBar);
-
-    const tabModules = {};
-    let currentTab = "Combat";
-    for (const tabName of Object.keys(moduleCategories)) {
-      const btn = document.createElement("button");
-      btn.className = "control";
-      btn.textContent = tabName;
-      btn.onclick = () => switchTab(tabName);
-      tabWrap.appendChild(btn);
-      tabModules[tabName] = [];
-    }
-
-    // Create modules
-    Object.entries(store.modules).forEach(([name, mod]) => {
-      const box = document.createElement("div");
-      box.className = "module";
-
-      // Choose icon
-      let icon = "❓";
-      for (const [cat, keys] of Object.entries(moduleCategories)) {
-        if (keys.some(k => name.toLowerCase().includes(k))) {
-          icon = categoryIcons[cat] || icon;
-          break;
-        }
-      }
-
-      const toggle = document.createElement("button");
-      toggle.className = "toggle-btn";
-      toggle.textContent = mod.enabled ? "ON" : "OFF";
-      toggle.onclick = () => {
-        mod.toggle();
-        toggle.textContent = mod.enabled ? "ON" : "OFF";
-        showNotif(`${name} module has been toggled ${mod.enabled ? "ON" : "OFF"}`);
-      };
-
-      box.innerHTML = `<b>${icon} ${name}</b>`;
-      box.appendChild(toggle);
-
-      if (mod.options) {
-        Object.values(mod.options).forEach(opt => {
-          const [type, val, label] = opt;
-          const line = document.createElement("div");
-          line.className = "option-line";
-          line.innerText = label + ": ";
-
-          if (type === Boolean) {
-            const cb = document.createElement("input");
-            cb.type = "checkbox";
-            cb.checked = val;
-            cb.onchange = () => (opt[1] = cb.checked);
-            line.appendChild(cb);
-          } else if (type === Number) {
-            const slider = document.createElement("input");
-            slider.type = "range";
-            slider.min = 0;
-            slider.max = 10;
-            slider.step = 0.1;
-            slider.value = val;
-
-            const liveLabel = document.createElement("span");
-            liveLabel.className = "live-label";
-            liveLabel.textContent = val;
-
-            slider.oninput = () => {
-              opt[1] = parseFloat(slider.value);
-              liveLabel.textContent = slider.value;
-            };
-
-            line.appendChild(slider);
-            line.appendChild(liveLabel);
-          } else if (type === String) {
-            const input = document.createElement("input");
-            input.type = "text";
-            input.value = val;
-            input.onchange = () => (opt[1] = input.value);
-            line.appendChild(input);
-          }
-          box.appendChild(line);
-        });
-      }
-
-      const bindLine = document.createElement("div");
-      bindLine.className = "option-line";
-      bindLine.innerHTML = `Bind: <input type="text" style="width:60px" value="${mod.bind}">`;
-      bindLine.querySelector("input").onchange = e => mod.setbind(e.target.value);
-      box.appendChild(bindLine);
-
-      let cat = "Misc";
-      for (const [k, keys] of Object.entries(moduleCategories)) {
-        if (keys.some(x => name.toLowerCase().includes(x))) {
-          cat = k;
-          break;
-        }
-      }
-      tabModules[cat].push(box);
-      box.style.display = cat === currentTab ? "block" : "none";
-      gui.appendChild(box);
-    });
-
-    function switchTab(tab) {
-      currentTab = tab;
-      const q = searchBar.value.toLowerCase();
-      Object.entries(tabModules).forEach(([cat, boxes]) => {
-        boxes.forEach(b => {
-          const nm = b.querySelector("b").textContent.toLowerCase();
-          b.style.display = cat === tab && (nm.includes(q) || q.split("").every(ch => nm.includes(ch)))
-            ? "block" : "none";
-        });
+  // ==[ Helper: switchTab ]==
+  function switchTab(tab) {
+    currentTab = tab;
+    const q = searchBar.value.toLowerCase();
+    Object.entries(tabModules).forEach(([cat, modules]) => {
+      modules.forEach(modBox => {
+        const title = modBox.querySelector("b").textContent.toLowerCase();
+        const match = cat === tab && (title.includes(q) || q.split("").every(ch => title.includes(ch)));
+        modBox.style.display = match ? "block" : "none";
       });
-    }
-    searchBar.addEventListener("input", () => switchTab(currentTab));
-
-    // Control buttons, themes & profiles
-    const ctrl = document.createElement("div");
-    ctrl.id = "guiControls";
-    gui.appendChild(ctrl);
-
-    const themes = ["dark", "minecraft", "neon", "glass", "frame", "sunset", "ocean", "chrome", "terminal"];
-    let themeIndex = themes.indexOf(await GM_getValue("guiTheme", "dark"));
-
-    const themeBtn = document.createElement("button");
-    themeBtn.className = "control";
-    themeBtn.textContent = "Toggle Theme";
-    themeBtn.onclick = () => {
-      themeIndex = (themeIndex + 1) % themes.length;
-      GM_setValue("guiTheme", themes[themeIndex]);
-      applyTheme(themes[themeIndex]);
-    };
-    ctrl.appendChild(themeBtn);
-
-    const exportBtn = document.createElement("button");
-    exportBtn.className = "control";
-    exportBtn.textContent = "Export";
-    exportBtn.onclick = () => {
-      const prof = store.profile;
-      const cfg = GM_getValue("vapeConfig" + prof, "{}");
-      navigator.clipboard.writeText(cfg).then(() => alert("✅ Exported"));
-    };
-    ctrl.appendChild(exportBtn);
-
-    const importBtn = document.createElement("button");
-    importBtn.className = "control";
-    importBtn.textContent = "Import";
-    importBtn.onclick = async () => {
-      const prof = store.profile;
-      const txt = await navigator.clipboard.readText();
-      if (txt) {
-        await GM_setValue("vapeConfig" + prof, txt);
-        await store.loadVapeConfig(prof);
-        alert("✅ Imported");
-      } else {
-        alert("❌ Clipboard empty");
-      }
-    };
-    ctrl.appendChild(importBtn);
-
-    const saveBtn = document.createElement("button");
-    saveBtn.className = "control";
-    saveBtn.textContent = "Save";
-    saveBtn.onclick = () => store.saveVapeConfig();
-    ctrl.appendChild(saveBtn);
-
-    const loadBtn = document.createElement("button");
-    loadBtn.className = "control";
-    loadBtn.textContent = "Load";
-    loadBtn.onclick = () => store.loadVapeConfig();
-    ctrl.appendChild(loadBtn);
-
-    applyTheme(themes[themeIndex]);
-
-    // Theme application logic
-    function applyTheme(m) {
-      const root = document.getElementById("clickGUI");
-      const buttons = root.querySelectorAll("button");
-      // Reset styles
-      root.style.backdropFilter = root.style.background = root.style.border = root.style.color = "";
-      buttons.forEach(b => b.style.background = b.style.color = b.style.border = "");
-
-      const setBtn = (bg, clr, border) => buttons.forEach(b => { b.style.background = bg; b.style.color = clr; b.style.border = border; });
-
-      switch (m) {
-        case "dark":
-          root.style.background = "rgba(15,15,15,0.95)";
-          root.style.color = "#fff";
-          root.style.border = "2px solid lime";
-          setBtn("black", "lime", "1px solid lime");
-          break;
-        case "minecraft":
-          root.style.background = 'url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets/assets/minecraft/textures/block/stone.png") repeat';
-          root.style.backgroundSize = "64px 64px";
-          root.style.imageRendering = "pixelated";
-          root.style.color = "#0f0";
-          root.style.fontFamily = '"Minecraft", monospace';
-          root.style.border = "3px double #0f0";
-          setBtn("#1a1a1a", "#0f0", "1px solid #0f0");
-          break;
-        case "neon":
-          root.style.background = "#000";
-          root.style.color = "#0ff";
-          root.style.border = "2px solid #0ff";
-          setBtn("#111", "#0ff", "1px solid #0ff");
-          break;
-        case "glass":
-          root.style.background = "rgba(255,255,255,0.08)";
-          root.style.color = "#fff";
-          root.style.backdropFilter = "blur(10px)";
-          root.style.border = "1px solid rgba(255,255,255,0.2)";
-          setBtn("rgba(255,255,255,0.15)", "#fff", "1px solid rgba(255,255,255,0.3)");
-          break;
-        case "frame":
-          root.style.background = "#ddd";
-          root.style.color = "#111";
-          root.style.border = "2px solid #444";
-          setBtn("#eee", "#111", "1px solid #888");
-          break;
-        case "sunset":
-          root.style.background = "linear-gradient(135deg,#ff5f6d,#ffc371)";
-          root.style.color = "#fff";
-          root.style.border = "2px solid #ffb347";
-          setBtn("#ff7e5f", "#fff", "1px solid #fff");
-          break;
-        case "ocean":
-          root.style.background = "linear-gradient(135deg,#2b5876,#4e4376)";
-          root.style.color = "#ccf";
-          root.style.border = "2px solid #88f";
-          setBtn("#334", "#ccf", "1px solid #ccf");
-          break;
-        case "chrome":
-          root.style.background = "#dfe4ea";
-          root.style.color = "#2f3542";
-          root.style.border = "2px solid #57606f";
-          setBtn("#f1f2f6", "#2f3542", "1px solid #57606f");
-          break;
-        case "terminal":
-          root.style.background = "#000";
-          root.style.color = "#0f0";
-          root.style.border = "2px solid #0f0";
-          setBtn("#000", "#0f0", "1px solid #0f0");
-          break;
-      }
-    }
-
-    // Toggle visibility with Backslash (\\)
-    let visible = false;
-    document.addEventListener("keydown", e => {
-      if (e.code === "Backslash") {
-        visible = !visible;
-        gui.style.display = visible ? "block" : "none";
-      }
     });
   }
-})();
-(function() {
-    'use strict';
+  searchBar.addEventListener("input", () => switchTab(currentTab));
 
-   // Top of script — prevents re-injection
-if (window.__impactSplashShown || document.getElementById("impact-v4-splash")) return;
-window.__impactSplashShown = true;
+  // ==[ Module Reordering w/ Drag Handle ]==
+  const orderKey = `guiOrder_${store.profile}`;
+  let guiOrder = GM_getValue(orderKey, "{}");
+  try { guiOrder = JSON.parse(guiOrder); } catch { guiOrder = {}; }
 
+  function saveOrder() {
+    const obj = {};
+    for (const cat of Object.keys(tabModules)) {
+      obj[cat] = tabModules[cat].map(div => div.getAttribute("data-name"));
+    }
+    GM_setValue(orderKey, JSON.stringify(obj));
+  }
 
-    // Wait until DOM is ready
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", showSplash);
-    } else {
-        showSplash();
+  function reorderModules(cat) {
+    if (!guiOrder[cat]) return;
+    const current = tabModules[cat];
+    const nameMap = {};
+    current.forEach(modBox => nameMap[modBox.getAttribute("data-name")] = modBox);
+    const sorted = guiOrder[cat].map(name => nameMap[name]).filter(Boolean);
+    tabModules[cat] = sorted;
+    sorted.forEach(div => gui.appendChild(div));
+  }
+
+  function addDragLogic(box, category) {
+    box.draggable = true;
+    box.ondragstart = e => {
+      e.dataTransfer.setData("text/plain", box.getAttribute("data-name"));
+    };
+    box.ondragover = e => e.preventDefault();
+    box.ondrop = e => {
+      const draggedName = e.dataTransfer.getData("text/plain");
+      const boxes = tabModules[category];
+      const dragged = boxes.find(b => b.getAttribute("data-name") === draggedName);
+      const dropIndex = boxes.indexOf(box);
+      const dragIndex = boxes.indexOf(dragged);
+      if (dragged && dropIndex !== dragIndex) {
+        boxes.splice(dragIndex, 1);
+        boxes.splice(dropIndex, 0, dragged);
+        boxes.forEach(div => gui.appendChild(div));
+        saveOrder();
+      }
+    };
+  }
+  // ==[ Add Modules to GUI ]==
+  let toggleCount = 0;
+  const sessionStart = Date.now();
+
+  Object.entries(store.modules).forEach(([name, mod]) => {
+    const box = document.createElement("div");
+    box.className = "module";
+    box.setAttribute("data-name", name);
+
+    // Drag Handle
+    const drag = document.createElement("span");
+    drag.textContent = "⠿";
+    drag.className = "drag-handle";
+    box.appendChild(drag);
+
+    // Icon
+    let icon = "❓";
+    for (const [cat, keys] of Object.entries(MODULE_CATEGORIES)) {
+      if (keys.some(k => name.toLowerCase().includes(k))) {
+        icon = CATEGORY_ICONS[cat];
+        break;
+      }
     }
 
-    function showSplash() {
-        const splash = document.createElement("div");
-        splash.id = "simple-splash";
-        splash.style.position = "fixed";
-        splash.style.top = "50%";
-        splash.style.left = "50%";
-        splash.style.transform = "translate(-50%, -50%)";
-        splash.style.padding = "40px 60px";
-        splash.style.background = "#111";
-        splash.style.color = "#fff";
-        splash.style.fontFamily = "monospace";
-        splash.style.fontSize = "18px";
-        splash.style.border = "2px solid #0f0";
-        splash.style.borderRadius = "12px";
-        splash.style.boxShadow = "0 0 20px rgba(0,255,0,0.3)";
-        splash.style.zIndex = "9999";
-        splash.style.textAlign = "center";
-        splash.style.opacity = "0";
-        splash.style.transition = "opacity 1s ease-in-out";
-        splash.innerText = "🟢 Loading Impact V4 Modules/Binds...";
+    // Title
+    const title = document.createElement("b");
+    title.textContent = `${icon} ${name}`;
+    box.appendChild(title);
 
-        document.body.appendChild(splash);
+    // Toggle Button
+    const toggle = document.createElement("button");
+    toggle.className = "toggle-btn";
+    toggle.textContent = mod.enabled ? "ON" : "OFF";
+    toggle.onclick = () => {
+      mod.toggle();
+      toggle.textContent = mod.enabled ? "ON" : "OFF";
+      toggleCount++;
+      showNotif(`${name} is now ${mod.enabled ? "✅ ON" : "❌ OFF"}`);
+    };
+    box.appendChild(toggle);
 
-        // Fade in
-        setTimeout(() => {
-            splash.style.opacity = "1";
-        }, 50);
+    // Options
+    if (mod.options) {
+      Object.values(mod.options).forEach(opt => {
+        const [type, val, label] = opt;
+        const line = document.createElement("div");
+        line.className = "option-line";
+        line.innerHTML = `${label}: `;
 
-        // Wait 2.5 seconds, then fade out and remove
-        setTimeout(() => {
-            splash.style.opacity = "0";
-            setTimeout(() => splash.remove(), 1000);
-        }, 2500);
+        if (type === Boolean) {
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = val;
+          cb.onchange = () => (opt[1] = cb.checked);
+          line.appendChild(cb);
+        } else if (type === Number) {
+          const slider = document.createElement("input");
+          slider.type = "range";
+          slider.min = 0; slider.max = 10; slider.step = 0.1;
+          slider.value = val;
+
+          const liveLabel = document.createElement("span");
+          liveLabel.className = "live-label";
+          liveLabel.textContent = val;
+
+          slider.oninput = () => {
+            opt[1] = parseFloat(slider.value);
+            liveLabel.textContent = slider.value;
+          };
+
+          line.appendChild(slider);
+          line.appendChild(liveLabel);
+        } else if (type === String) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = val;
+          input.onchange = () => (opt[1] = input.value);
+          line.appendChild(input);
+        }
+        box.appendChild(line);
+      });
     }
+
+    // 🔑 Smart Bind Input
+    const bindLine = document.createElement("div");
+    bindLine.className = "option-line";
+    const bindInput = document.createElement("input");
+    bindInput.type = "text";
+    bindInput.style.width = "60px";
+    bindInput.value = mod.bind;
+
+    bindInput.onfocus = () => {
+      bindInput.value = "";
+      const onKey = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = e.key.toUpperCase();
+        if (key.length === 1 || key === "ESCAPE" || key === "TAB") {
+          mod.setbind(key);
+          bindInput.value = key;
+          showNotif(`🔑 ${name} bound to ${key}`);
+          window.removeEventListener("keydown", onKey, true);
+        } else {
+          bindInput.value = "❌";
+        }
+      };
+      window.addEventListener("keydown", onKey, true);
+    };
+
+    bindLine.innerHTML = `Bind: `;
+    bindLine.appendChild(bindInput);
+    box.appendChild(bindLine);
+
+    // Add to Category + Drag Events
+    let cat = "Misc";
+    for (const [k, keys] of Object.entries(MODULE_CATEGORIES)) {
+      if (keys.some(x => name.toLowerCase().includes(x))) {
+        cat = k;
+        break;
+      }
+    }
+
+    tabModules[cat].push(box);
+    box.style.display = cat === currentTab ? "block" : "none";
+    gui.appendChild(box);
+    addDragLogic(box, cat);
+  });
+
+  // Order recovery
+  for (const cat of Object.keys(tabModules)) reorderModules(cat);
+
+  // ==[ Live Session Stats ]==
+  const stats = document.createElement("div");
+  stats.id = "guiStats";
+  gui.appendChild(stats);
+
+  function updateStats() {
+    const onModules = Object.values(store.modules).filter(m => m.enabled).length;
+    const duration = Math.floor((Date.now() - sessionStart) / 1000);
+    const fmt = sec => new Date(sec * 1000).toISOString().substr(11, 8);
+    stats.innerHTML = `
+      🕒 Uptime: ${fmt(duration)}<br>
+      ✅ Active Modules: ${onModules}<br>
+      🔁 Toggles this session: ${toggleCount}<br>
+      🧾 Config: ${store.profile}
+    `;
+  }
+  setInterval(updateStats, 1000);
+  // ==[ Theme Engine ]==
+  let themeIndex = THEMES.indexOf(await GM_getValue("guiTheme", "dark"));
+  applyTheme(THEMES[themeIndex]);
+
+  const themeBtn = document.createElement("button");
+  themeBtn.className = "toggle-btn";
+  themeBtn.textContent = "🎨 Theme";
+  themeBtn.onclick = () => {
+    themeIndex = (themeIndex + 1) % THEMES.length;
+    const theme = THEMES[themeIndex];
+    GM_setValue("guiTheme", theme);
+    applyTheme(theme);
+    showNotif(`🌈 Theme switched to ${theme}`);
+  };
+  gui.appendChild(themeBtn);
+
+  function applyTheme(name) {
+    const root = document.documentElement.style;
+    root.removeProperty('--bg'); root.removeProperty('--accent'); root.removeProperty('--text');
+    switch (name) {
+      case "dark":
+        root.setProperty("--bg", "rgba(15,15,15,0.95)");
+        root.setProperty("--accent", "lime");
+        root.setProperty("--text", "white");
+        break;
+      case "minecraft":
+        gui.style.fontFamily = '"Minecraft", monospace';
+        root.setProperty("--bg", "#3c3c3c");
+        root.setProperty("--accent", "#0f0");
+        root.setProperty("--text", "#0f0");
+        break;
+      case "neon":
+        root.setProperty("--bg", "#000");
+        root.setProperty("--accent", "#0ff");
+        root.setProperty("--text", "#0ff");
+        break;
+      case "glass":
+        root.setProperty("--bg", "rgba(255,255,255,0.08)");
+        root.setProperty("--accent", "#fff");
+        root.setProperty("--text", "#fff");
+        break;
+      case "frame":
+        root.setProperty("--bg", "#eee");
+        root.setProperty("--accent", "#333");
+        root.setProperty("--text", "#111");
+        break;
+      case "sunset":
+        root.setProperty("--bg", "linear-gradient(135deg,#ff5f6d,#ffc371)");
+        root.setProperty("--accent", "#fff");
+        root.setProperty("--text", "#fff");
+        break;
+      case "ocean":
+        root.setProperty("--bg", "linear-gradient(135deg,#2b5876,#4e4376)");
+        root.setProperty("--accent", "#ccf");
+        root.setProperty("--text", "#ccf");
+        break;
+      case "chrome":
+        root.setProperty("--bg", "#dfe4ea");
+        root.setProperty("--accent", "#2f3542");
+        root.setProperty("--text", "#2f3542");
+        break;
+      case "terminal":
+        root.setProperty("--bg", "#000");
+        root.setProperty("--accent", "#0f0");
+        root.setProperty("--text", "#0f0");
+        break;
+    }
+  }
+
+  // ==[ Notifications ]==
+  const notifWrap = document.createElement("div");
+  notifWrap.style = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    pointer-events: none;
+  `;
+  document.body.appendChild(notifWrap);
+
+  function showNotif(text) {
+    const notif = document.createElement("div");
+    notif.textContent = text;
+    notif.style = `
+      background: var(--bg);
+      color: var(--accent);
+      font-family: monospace;
+      font-size: 14px;
+      margin-top: 8px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 2px solid var(--accent);
+      box-shadow: 0 2px 12px #000a;
+      opacity: 1;
+      transform: translateX(120%);
+      transition: opacity 0.4s, transform 0.4s cubic-bezier(.23,1.29,.56,1.01);
+    `;
+    notifWrap.appendChild(notif);
+
+    requestAnimationFrame(() => notif.style.transform = "translateX(0)");
+    setTimeout(() => { notif.style.opacity = 0; notif.style.transform = "translateX(120%)"; }, 4000);
+    setTimeout(() => notif.remove(), 4600);
+  }
+
+  // ==[ Toggle GUI with Backslash (\\) ]==
+  let guiVisible = false;
+  document.addEventListener("keydown", e => {
+    if (e.code === "Backslash") {
+      guiVisible = !guiVisible;
+      gui.style.display = guiVisible ? "block" : "none";
+    }
+  });
 })();

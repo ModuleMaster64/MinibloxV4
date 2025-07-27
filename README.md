@@ -4,3 +4,7 @@ A Tampermonkey Script That Improves Miniblox! (by bypassing an custom anticheat 
 ONE OF THE BEST CLIENTS TO DATE WHICH STILL BYPASSES!
 
 with clean CLICK GUI
+
+and constant updates daily
+
+Who owns this repo - Me (ofc)

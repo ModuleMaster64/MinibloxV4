@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MINIBLOX v4
 // @namespace    http://7granddadpgn.github.io
-// @version      v3.20-dev
+// @version      v3.21-dev
 // @description  A browser script made to give huge enhancements on Miniblox!
 // @author       7GrandDad, ModuleM64, RealPacket, ProgMEM-CC, he557
 // @match        https://miniblox.io/

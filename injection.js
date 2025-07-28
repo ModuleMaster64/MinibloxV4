@@ -1459,7 +1459,7 @@ const AutoFunnyChat = new Module("AutoFunnyChat", function(callback) {
                 }, 500 + Math.random() * 1000); // slight delay for realism
             }
         };
-        ClientSocket.on("CPacketMessage", window.__autoFunnyKillMsgListener);
+        ClientSocket.socket.off("CPacketMessage", window.__autoFunnyKillMsgListener);
     }
 });
 

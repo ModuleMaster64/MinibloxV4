@@ -5,7 +5,7 @@ let replacements = {};
 let dumpedVarNames = {};
 const storeName = "a" + crypto.randomUUID().replaceAll("-", "").substring(16);
 const vapeName = crypto.randomUUID().replaceAll("-", "").substring(16);
-const VERSION = "3.21-dev";
+const VERSION = "3.24-dev";
 
 // ANTICHEAT HOOK
 function replaceAndCopyFunction(oldFunc, newFunc) {
@@ -417,7 +417,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 		if (u == "GrandDad") {
 			const $ = capes[u];
 			return new Promise((et, tt) => {
-				textureManager.loader.load("${corsMoment("https://codeberg.org/RealPacket/VapeForMiniblox/raw/branch/main/assets/cape.png")}", rt => {
+				textureManager.loader.load("${corsMoment("https://codeberg.org/ee6-lang/MinibloxV4/raw/branch/main/assets/duck.png")}", rt => {
 					const nt = {
 						atlas: rt,
 						id: u,

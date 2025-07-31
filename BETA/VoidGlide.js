@@ -19,10 +19,6 @@ const VoidGlide = new Module("VoidGlide", function(callback) {
                 player.motion.y *= 0.6;
                 player.motion.x *= 1.05;
                 player.motion.z *= 1.05;
-
-                // ✨ Optional eye candy
-                hud3D.addParticle("cloud", player.pos.x, player.pos.y - 0.2, player.pos.z);
-                game.sound.play("entity.elder_guardian.ambient", player.pos, 0.2, 1.5);
             }
         };
     } else {

@@ -1,3 +1,4 @@
+// DEV SCAFFOLD (created by ModuleM64 XD)
 let scaffoldtower, oldHeld, scaffoldextend, scaffoldcycle;
 let tickCount = 0;
 
@@ -25,7 +26,7 @@ const scaffold = new Module("Scaffold", function(callback) {
         tickLoop["Scaffold"] = function() {
             tickCount++;
 
-            // 🔁 Auto-select blocks & cycle between them
+            // 🔁 Auto-select blocks & cycle between them (NEW)
             let slotsWithBlocks = [];
             for (let i = 0; i < 9; i++) {
                 const item = player.inventory.main[i];
@@ -176,7 +177,7 @@ const scaffold = new Module("Scaffold", function(callback) {
                         }
                     }
 
-                    break; // ✅ Stop checking after placing
+                    break; // ✅ Stop checking after placing (NEW)
                 }
             }
         };
@@ -190,4 +191,4 @@ const scaffold = new Module("Scaffold", function(callback) {
 
 scaffoldtower = scaffold.addoption("Tower", Boolean, true);
 scaffoldextend = scaffold.addoption("Extend", Number, 1);
-scaffoldcycle = scaffold.addoption("CycleSpeed", Number, 10);
+scaffoldcycle = scaffold.addoption("CycleSpeed", Number, 10); // NEW Cycle Speed option! (This loops through the inventory if there are blocks)

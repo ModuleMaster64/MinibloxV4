@@ -1,4 +1,4 @@
-// DEV SCAFFOLD (created by ModuleM64 XD)
+// DEV SCAFFOLD (created by ModuleM64)
 let scaffoldtower, oldHeld, scaffoldextend, scaffoldcycle;
 let tickCount = 0;
 

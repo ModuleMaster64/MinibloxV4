@@ -9,4 +9,5 @@ and constant updates daily!!
 
 Who owns this repo - Me (ofc)
 
-https://gitmystat.vercel.app/repo?theme=dino&username=ModuleMaster64&repo=MinibloxV4
+![MinibloxV4 Stats](https://gitmystat.vercel.app/repo?theme=dino&username=ModuleMaster64&repo=MinibloxV4)
+

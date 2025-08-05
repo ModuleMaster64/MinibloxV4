@@ -8,3 +8,5 @@ with clean CLICK GUI that works smoothly without errors
 and constant updates daily!!
 
 Who owns this repo - Me (ofc)
+
+https://gitmystat.vercel.app/repo?theme=dino&username=ModuleMaster64&repo=MinibloxV4

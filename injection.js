@@ -1033,8 +1033,9 @@ cheststealblocks = cheststeal.addoption("Blocks", Boolean, true);
 cheststealtools = cheststeal.addoption("Tools", Boolean, true);
 
 
+// DEV SCAFFOLD! (Created by me again xD)
 
-			let scaffoldtower, oldHeld, scaffoldextend, scaffoldcycle;
+let scaffoldtower, oldHeld, scaffoldextend, scaffoldcycle;
 let tickCount = 0;
 
 function getPossibleSides(pos) {
@@ -1054,11 +1055,11 @@ function switchSlot(slot) {
     game.info.selectedSlot = slot;
 }
 
-const scaffold = new Module("Scaffold", function(callback) {
+const scaffold = new Module("DEVScaffold", function(callback) {
     if (callback) {
         if (player) oldHeld = game.info.selectedSlot;
 
-        tickLoop["Scaffold"] = function() {
+        tickLoop["DEVScaffold"] = function() {
             tickCount++;
 
             // 🔁 Auto-select blocks & cycle between them
@@ -1220,7 +1221,7 @@ const scaffold = new Module("Scaffold", function(callback) {
         if (player && oldHeld !== undefined) {
             switchSlot(oldHeld);
         }
-        delete tickLoop["Scaffold"];
+        delete tickLoop["DEVScaffold"];
     }
 });
 

@@ -1102,11 +1102,11 @@ function switchSlot(slot) {
     game.info.selectedSlot = slot;
 }
 
-const scaffold = new Module("Scaffold", function(callback) {
+const scaffold = new Module("EScaffold", function(callback) {
     if (callback) {
         if (player) oldHeld = game.info.selectedSlot;
 
-        tickLoop["Scaffold"] = function() {
+        tickLoop["EScaffold"] = function() {
             tickCount++;
 
             // 🔁 Auto-select blocks & cycle between them
@@ -1268,7 +1268,7 @@ const scaffold = new Module("Scaffold", function(callback) {
         if (player && oldHeld !== undefined) {
             switchSlot(oldHeld);
         }
-        delete tickLoop["Scaffold"];
+        delete tickLoop["EScaffold"];
     }
 });
 

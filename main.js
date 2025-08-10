@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         MINIBLOX v4
+// @name         MINIBLOX Client!
 // @namespace    https://codeberg.org/ee6-lang
-// @version      v4-dev
+// @version      v4.01-dev
 // @description  A browser script made to give huge enhancements on Miniblox!
 // @author       ModuleM64, 7GrandDadPGN, RealPacket, ProgMEM-CC, he557
 // @match        https://miniblox.io/

@@ -8,3 +8,8 @@ with clean CLICK GUI that works smoothly without errors
 and constant updates daily!!
 
 Who owns this repo - Me (ofc)
+
+36 handcrafted modules created by a team of clever devs for miniblox bypassing!!
+
+
+Note: (ur goated)

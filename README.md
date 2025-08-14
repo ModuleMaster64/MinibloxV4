@@ -13,3 +13,5 @@ Who owns this repo - Me (ofc)
 
 
 Note: (ur goated)
+
+![MinibloxV4 Stats](https://gitmystat.vercel.app/repo?theme=dino&username=ModuleMaster64&repo=MinibloxV4)

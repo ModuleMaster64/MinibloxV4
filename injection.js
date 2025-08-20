@@ -1245,13 +1245,6 @@ scaffoldcycle = scaffold.addoption("CycleSpeed", Number, 10);
 			chatdisablermsg = chatdisabler.addoption("Message", String, "youtube.com/c/7GrandDadVape");
 			new Module("FilterBypass", function() {});
 
-			const survival = new Module("SurvivalMode", function(callback) {
-				if (callback) {
-					if (player) player.setGamemode(GameMode.fromId("survival"));
-					survival.toggle();
-				}
-			});
-
 			function dropSlot(index) {
 	playerControllerDump.windowClickDump(player.openContainer.windowId, index, 0, 0, player);
 	playerControllerDump.windowClickDump(player.openContainer.windowId, -999, 0, 0, player);

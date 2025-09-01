@@ -1274,7 +1274,7 @@ const InvCleaner = new Module("InvCleaner", function (callback) {
 
     tickLoop["InvCleaner"] = function () {
         const now = Date.now();
-        if (now - lastRun < 45) return;
+        if (now - lastRun < 65) return;
         lastRun = now;
 
         const keptTypes = new Set();

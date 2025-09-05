@@ -31,7 +31,6 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const fetch = require('node-fetch');
             const code = fs.readFileSync('review/all-code.txt', 'utf8');
             const prompt = `You are a senior JavaScript developer. Review the following code for bugs, code smells, security issues, and improvement suggestions:\n\n${code}`;
 

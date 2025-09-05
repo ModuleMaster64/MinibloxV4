@@ -1,0 +1,67 @@
+name: AI Code Review
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find JavaScript files
+        run: |
+          find . -name "*.js" > js-files.txt
+
+      - name: Concatenate JS files
+        run: |
+          mkdir review
+          while read file; do
+            echo "\n// File: $file\n" >> review/all-code.txt
+            cat "$file" >> review/all-code.txt
+          done < js-files.txt
+
+      - name: Send to GPT for Review
+        id: gpt
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const code = fs.readFileSync('review/all-code.txt', 'utf8');
+            const prompt = `You are a senior JavaScript developer. Review the following code for bugs, code smells, security issues, and improvement suggestions:\n\n${code}`;
+            
+            const response = await github.request('POST https://api.openai.com/v1/chat/completions', {
+              headers: {
+                Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              data: {
+                model: "gpt-4",
+                messages: [{ role: "user", content: prompt }],
+                temperature: 0.7
+              }
+            });
+
+            const feedback = response.data.choices[0].message.content;
+            fs.writeFileSync('review/feedback.txt', feedback);
+            return feedback;
+
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Create GitHub Issue
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const feedback = fs.readFileSync('review/feedback.txt', 'utf8');
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "🧠 AI Code Review Feedback",
+              body: feedback
+            });

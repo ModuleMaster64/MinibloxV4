@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         MINIBLOX Client!
+// @name         MINIBLOX funny Client!
 // @namespace    https://codeberg.org/ee6-lang
 // @version      v4.01-dev
 // @description  A browser script made to give huge enhancements on Miniblox!

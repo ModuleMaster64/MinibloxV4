@@ -1,11 +1,11 @@
-/**
- * @type {Record<string | RegExp, string>}
- */
 let replacements = {};
 let dumpedVarNames = {};
+let loadedConfig = false;
 const storeName = "a" + crypto.randomUUID().replaceAll("-", "").substring(16);
 const vapeName = crypto.randomUUID().replaceAll("-", "").substring(16);
-const VERSION = "4.01-dev";
+const storageKey = "vapeClient";
+const VERSION = "devNo1";
+
 
 // ANTICHEAT HOOK
 function replaceAndCopyFunction(oldFunc, newFunc) {
@@ -84,7 +84,7 @@ function modifyCode(text) {
 (function() {
 	'use strict';
 
-	// DUMPING
+	// DUMPS
 	addDump('moveStrafeDump', 'this\\.([a-zA-Z]+)=\\([a-zA-Z]+\\.right');
 	addDump('moveForwardDump', 'this\\.([a-zA-Z]+)=\\([a-zA-Z]+\\.(up|down)');
 	addDump('keyPressedDump', 'function ([a-zA-Z]*)\\([a-zA-Z]*\\)\{return keyPressed\\([a-zA-Z]*\\)');
@@ -98,7 +98,7 @@ function modifyCode(text) {
 	addDump('boxGeometryDump', 'w=new Mesh\\(new ([a-zA-Z]*)\\(1');
 	addDump('syncItemDump', 'playerControllerMP\.([a-zA-Z]*)\\(\\),ClientSocket\.sendPacket');
 
-	// PRE
+	// PRE LOADUP
 	addModification('document.addEventListener("DOMContentLoaded",startGame,!1);', `
 		setTimeout(function() {
 			var DOMContentLoaded_event = document.createEvent("Event");
@@ -107,10 +107,16 @@ function modifyCode(text) {
 		}, 0);
 	`);
 	addModification('y:this.getEntityBoundingBox().min.y,', 'y:sendY != false ? sendY : this.getEntityBoundingBox().min.y,', true);
+    addModification("const player=new ClientEntityPlayer", `
+// note: when using desync,
+// your position will only update every 20 ticks.
+let serverPos = player.pos.clone();
+`);
 	addModification('Potions.jump.getId(),"5");', `
 		let blocking = false;
 		let sendYaw = false;
 		let sendY = false;
+        let desync = false;
 		let breakStart = Date.now();
 		let noMove = Date.now();
 
@@ -126,6 +132,24 @@ function modifyCode(text) {
 		let lastJoined, velocityhori, velocityvert, chatdisablermsg, textguifont, textguisize, textguishadow, attackedEntity, stepheight;
 		let attackTime = Date.now();
 		let chatDelay = Date.now();
+
+        /**
+		 * clamps the given position to the given range
+		 * @param {Vector3} pos
+		 * @param {Vector3} serverPos
+		 * @param {number} range
+		 * @returns {Vector3} the clamped position
+		**/
+		function desyncMath(pos, serverPos, range) {
+			const moveVec = {x: (pos.x - serverPos.x), y: (pos.y - serverPos.y), z: (pos.z - serverPos.z)};
+			const moveMag = Math.sqrt(moveVec.x * moveVec.x + moveVec.y * moveVec.y + moveVec.z * moveVec.z);
+
+			return moveMag > range ? {
+				x: serverPos.x + ((moveVec.x / moveMag) * range),
+				y: serverPos.y + ((moveVec.y / moveMag) * range),
+				z: serverPos.z + ((moveVec.z / moveMag) * range)
+			} : pos;
+		}
 
 		function getModule(str) {
 			for(const [name, module] of Object.entries(modules)) {
@@ -143,12 +167,11 @@ function modifyCode(text) {
 	`);
 
 	addModification('VERSION$1," | ",', `"${vapeName} v${VERSION}"," | ",`);
-	addModification('if(!x.canConnect){', 'x.errorMessage = x.errorMessage === "Could not join server. You are connected to a VPN or proxy. Please disconnect from it and refresh the page." ? "[Vape] You\'re IP banned (these probably don\'t exist now anyways)" : x.errorMessage;');
+	addModification('if(!x.canConnect){', 'x.errorMessage = x.errorMessage === "Could not join server. You are connected to a VPN or proxy. Please disconnect from it and refresh the page." ? "[Vape] You\'re IP banned! (these probably don\'t exist now anyways)" : x.errorMessage;');
 
 	// DRAWING SETUP
 	addModification('I(this,"glintTexture");', `
 		I(this, "vapeTexture");
-		I(this, "v4Texture");
 	`);
 	/**
 	 * @param {string} url
@@ -160,8 +183,7 @@ function modifyCode(text) {
 	addModification('skinManager.loadTextures(),', ',this.loadVape(),');
 	addModification('async loadSpritesheet(){', `
 		async loadVape() {
-			this.vapeTexture = await this.loader.loadAsync("${corsMoment("https://codeberg.org/ee6-lang/CookForMiniblox/raw/branch/main/assets/cooking.png")}");
-			this.v4Texture = await this.loader.loadAsync("${corsMoment("https://codeberg.org/RealPacket/VapeForMiniblox/raw/branch/main/assets/logov4.png")}");
+			this.vapeTexture = await this.loader.loadAsync("https://raw.githubusercontent.com/ProgMEM-CC/miniblox.impact.client.updatedv2/refs/heads/main/logo_old.png");
 		}
 		async loadSpritesheet(){
 	`, true);
@@ -184,20 +206,25 @@ function modifyCode(text) {
     }
 `);
 
-addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
+addModification(
+  '(this.drawSelectedItemStack(),this.drawHintBox())',
+  /*js*/`
     if (ctx$5 && enabledModules["TextGUI"]) {
         const colorOffset = Date.now() / 4000;
-        const posX = 15;
-        const posY = 27;
+
+        const canvasW = ctx$5.canvas.width;
+        const canvasH = ctx$5.canvas.height;
 
         ctx$5.imageSmoothingEnabled = true;
         ctx$5.imageSmoothingQuality = "high";
 
-        // Draw logo (left)
+        // Draw logo (bottom-right)
         const logo = textureManager.vapeTexture.image;
         const scale = 0.9;
         const logoW = logo.width * scale;
         const logoH = logo.height * scale;
+        const posX = canvasW - logoW - 15;
+        const posY = canvasH - logoH - 15;
 
         ctx$5.shadowColor = "rgba(0, 0, 0, 0.6)";
         ctx$5.shadowBlur = 6;
@@ -205,11 +232,8 @@ addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
         ctx$5.shadowColor = "transparent";
         ctx$5.shadowBlur = 0;
 
-        // Draw v4 badge next to logo
-        drawImage(ctx$5, textureManager.v4Texture.image, posX + logoW + 5, posY + 1, 33, 18);
-
         let offset = 0;
-        let stringList = [];
+        const stringList = [];
 
         for (const [module, value] of Object.entries(enabledModules)) {
             if (!value || module === "TextGUI") continue;
@@ -217,24 +241,26 @@ addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
         }
 
         // Sort by width (desc)
-        stringList.sort((a, b) => ctx$5.measureText(b).width - ctx$5.measureText(a).width);
+        stringList.sort(
+          (a, b) => ctx$5.measureText(b).width - ctx$5.measureText(a).width
+        );
 
         // Draw modules on the right
-        const screenWidth = ctx$5.canvas.width;
         const paddingRight = 15;
-        const startY = posY + logoH + 10;
+        const startY = 27 + 10;
 
-        for (const module of stringList) {
+        for (const moduleName of stringList) {
             offset++;
 
-            const text = module;
+            const text = moduleName;
             const fontStyle = \`\${textguisize[1]}px \${textguifont[1]}\`;
             ctx$5.font = fontStyle;
 
             const textWidth = ctx$5.measureText(text).width;
-            const x = screenWidth - textWidth - paddingRight;
-            const y = startY + ((textguisize[1] + 3) * offset);
+            const x = canvasW - textWidth - paddingRight;
+            const y = startY + (textguisize[1] + 3) * offset;
 
+            // Text shadow
             ctx$5.shadowColor = "black";
             ctx$5.shadowBlur = 4;
             ctx$5.shadowOffsetX = 1;
@@ -246,22 +272,30 @@ addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
                 x,
                 y,
                 fontStyle,
-                \`HSL(\${((colorOffset - (0.025 * offset)) % 1) * 360}, 100%, 50%)\`,
+                \`hsl(\${((colorOffset - 0.025 * offset) % 1) * 360},100%,50%)\`,
                 "left",
                 "top",
                 1,
                 textguishadow[1]
             );
 
-            // Clean up shadow state
+            // Reset shadow
             ctx$5.shadowColor = "transparent";
             ctx$5.shadowBlur = 0;
             ctx$5.shadowOffsetX = 0;
             ctx$5.shadowOffsetY = 0;
+
+            // Draw status dot
+            const dotX = x - 12;
+            const dotY = y - 4;
+            ctx$5.fillStyle = enabledModules[moduleName] ? "lime" : "red";
+            ctx$5.beginPath();
+            ctx$5.arc(dotX, dotY, 4, 0, Math.PI * 2);
+            ctx$5.fill();
         }
     }
-`);
-
+`
+);
 
 	// HOOKS
 	// instructions because this replacement is very vague when trying to find it after an update:
@@ -278,7 +312,31 @@ addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
 	addModification('this.game.unleash.isEnabled("disable-ads")', 'true', true);
 	// in EntityManager, renderEntities function
 	addModification('h.render()})', '; for(const [index, func] of Object.entries(renderTickLoop)) if (func) func();');
-	addModification('updateNameTag(){let h="white",p=1;', 'this.entity.team = this.entity.profile.cosmetics.color;');
+addModification('this.entity.profile.username', `
+(() => {
+  const profile = this.entity?.profile;
+  const username = profile?.username || "Player";
+  if (!enabledModules["NameTags+"]) return username;
+
+  const hp = this.entity.getHealth?.() || 0;
+  const combatRank = profile?.stats?.rank || "L";
+  const color = hp > 15 ? "§a" : hp > 7 ? "§e" : "§c";
+
+  const px = player?.pos?.x ?? 0;
+  const py = player?.pos?.y ?? 0;
+  const pz = player?.pos?.z ?? 0;
+  const ex = this.entity?.pos?.x ?? 0;
+  const ey = this.entity?.pos?.y ?? 0;
+  const ez = this.entity?.pos?.z ?? 0;
+  const dx = px - ex, dy = py - ey, dz = pz - ez;
+  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  const distStr = dist.toFixed(1) + "m";
+
+  return \`\${username}\\n(\${combatRank})\\n❤️ \${color}\${hp.toFixed(1)}\\n[\${distStr}]\`;
+})()
+`, true);
+
+
 	addModification('connect(u,h=!1,p=!1){', 'lastJoined = u;');
 	addModification('SliderOption("Render Distance ",2,8,3)', 'SliderOption("Render Distance ",2,64,3)', true);
 	addModification('ClientSocket.on("CPacketDisconnect",h=>{', `
@@ -288,6 +346,8 @@ addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
 			}, 400);
 		}
 	`);
+
+
 	// MUSIC FIX
 	addModification('const u=lodashExports.sample(MUSIC);',
 		`const vol = Options$1.sound.music.volume / BASE_VOLUME;
@@ -334,6 +394,7 @@ addModification('(this.drawSelectedItemStack(),this.drawHintBox())', /*js*/`
 	addModification('"CPacketEntityVelocity",h=>{const p=m.world.entitiesDump.get(h.id);', `
 		if (player && h.id == player.id && enabledModules["Velocity"]) {
 			if (velocityhori[1] == 0 && velocityvert[1] == 0) return;
+            ClientSocket.sendPacket(new SPacketPlayerInput({sequenceNumber: this.inputSequenceNumber++, pos: new PBVector3({y: g.y - 2, ...g})}));
 			h.motion = new Vector3$1($.motion.x * velocityhori[1], h.motion.y * velocityvert[1], h.motion.z * velocityhori[1]);
 		}
 	`);
@@ -370,6 +431,32 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 	// TODO: fix this
 	// addModification('0),this.sneak', ' && !enabledModules["NoSlowdown"]');
 
+    // DESYNC
+	addModification("this.inputSequenceNumber++", 'desync ? this.inputSequenceNumber : this.inputSequenceNumber++', true);
+	// addModification("new PBVector3({x:this.pos.x,y:this.pos.y,z:this.pos.z})", "desync ? inputPos : inputPos = this.pos", true);
+
+	// auto-reset desync variable.
+	addModification("reconcileServerPosition(h){", "serverPos = h;");
+
+	// hook into reconcileServerPosition
+	// so we know our server pos
+
+    // PREDICTION AC FIXER (make the ac a bit less annoying (e.g. when scaffolding))
+	// ig but this should be done in the desync branch instead lol
+// 	addModification("if(h.reset){this.setPosition(h.x,h.y,h.z),this.reset();return}", "", true);
+// 	addModification("this.serverDistance=y", `
+// if (h.reset) {
+// 	if (this.serverDistance >= 4) {
+// 		this.setPosition(h.x, h.y, h.z);
+// 	} else {
+// 		ClientSocket.sendPacket(new SPacketPlayerInput({sequenceNumber: NaN, pos: new PBVector3(g)}));
+// 		ClientSocket.sendPacket(new SPacketPlayerInput({sequenceNumber: NaN, pos: new PBVector3({x: h.x + 8, ...h})}));
+// 	}
+// 	this.reset();
+// 	return;
+// }
+// `);
+
 	// STEP
 	addModification('p.y=this.stepHeight;', 'p.y=(enabledModules["Step"]?Math.max(stepheight[1],this.stepHeight):this.stepHeight);', true);
 
@@ -392,7 +479,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 
 	// PHASE
 	addModification('calculateXOffset(A,this.getEntityBoundingBox(),g.x)', 'enabledModules["Phase"] ? g.x : calculateXOffset(A,this.getEntityBoundingBox(),g.x)', true);
-	addModification('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && !enabledModules["Scaffold"] && keyPressedDump("shift") ? g.y : calculateYOffset(A,this.getEntityBoundingBox(),g.y)', true);
+	addModification('calculateYOffset(A,this.getEntityBoundingBox(),g.y)', 'enabledModules["Phase"] && !enabledModules["Scaffold"] && keyPressedDump("alt") ? g.y : calculateYOffset(A,this.getEntityBoundingBox(),g.y)', true);
 	addModification('calculateZOffset(A,this.getEntityBoundingBox(),g.z)', 'enabledModules["Phase"] ? g.z : calculateZOffset(A,this.getEntityBoundingBox(),g.z)', true);
 	addModification('pushOutOfBlocks(u,h,p){', 'if (enabledModules["Phase"]) return;');
 
@@ -403,34 +490,177 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 		}
 	`);
 
-	// CHAMS
+    // PLAYER ESP (created by me :D)
 	addModification(')&&(p.mesh.visible=this.shouldRenderEntity(p))', `
-		if (enabledModules["Chams"] && p && p.id != player.id) {
-			for(const mesh in p.mesh.meshes) {
-				p.mesh.meshes[mesh].material.depthTest = false;
-				p.mesh.meshes[mesh].renderOrder = 3;
-			}
+  if (p && p.id != player.id) {
+    function hslToRgb(h, s, l) {
+      let r, g, b;
+      if(s === 0){ r = g = b = l; }
+      else {
+        const hue2rgb = (p, q, t) => {
+          if(t < 0) t += 1;
+          if(t > 1) t -= 1;
+          if(t < 1/6) return p + (q - p) * 6 * t;
+          if(t < 1/2) return q;
+          if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const pp = 2 * l - q;
+        r = hue2rgb(pp, q, h + 1/3);
+        g = hue2rgb(pp, q, h);
+        b = hue2rgb(pp, q, h - 1/3);
+      }
+      return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+      };
+    }
 
-			for(const mesh in p.mesh.armorMesh) {
-				p.mesh.armorMesh[mesh].material.depthTest = false;
-				p.mesh.armorMesh[mesh].renderOrder = 4;
-			}
+    function applyOutlineGlow(mesh, colorHex) {
+      if (!mesh || !mesh.material) return;
+      if (!mesh.userData.outlineClone) {
+        const outlineMaterial = mesh.material.clone();
+        outlineMaterial.color.setHex(0x000000);
+        outlineMaterial.emissive.setHex(colorHex);
+        outlineMaterial.emissiveIntensity = 1;
+        outlineMaterial.transparent = true;
+        outlineMaterial.opacity = 0.7;
+        outlineMaterial.depthTest = false;
 
-			if (p.mesh.capeMesh) {
-				p.mesh.capeMesh.children[0].material.depthTest = false;
-				p.mesh.capeMesh.children[0].renderOrder = 5;
-			}
+        const outline = mesh.clone();
+        outline.material = outlineMaterial;
+        outline.scale.multiplyScalar(1.05);
+        outline.renderOrder = mesh.renderOrder + 1;
 
-			if (p.mesh.hatMesh) {
-				for(const mesh of p.mesh.hatMesh.children[0].children) {
-					if (!mesh.material) continue;
-					mesh.material.depthTest = false;
-					mesh.renderOrder = 4;
-				}
-			}
-		}
-	`);
+        mesh.add(outline);
+        mesh.userData.outlineClone = outline;
+      } else {
+        mesh.userData.outlineClone.material.emissive.setHex(colorHex);
+      }
+    }
 
+    if (enabledModules["ESP"]) {
+      const time = Date.now() / 5000;
+      const hue = time % 1;
+      const rgb = hslToRgb(hue, 1, 0.5);
+      const colorHex = (rgb.r << 16) + (rgb.g << 8) + rgb.b;
+
+      if (p.mesh.meshes) {
+        for (const key in p.mesh.meshes) {
+          const mesh = p.mesh.meshes[key];
+          if (!mesh?.material) continue;
+          mesh.material.depthTest = false;
+          mesh.renderOrder = 3;
+          mesh.material.color.setHex(colorHex);
+          mesh.material.emissive.setHex(colorHex);
+          mesh.material.emissiveIntensity = 0.8;
+          applyOutlineGlow(mesh, colorHex);
+        }
+      }
+
+      if (p.mesh.armorMesh) {
+        for (const key in p.mesh.armorMesh) {
+          const mesh = p.mesh.armorMesh[key];
+          if (!mesh?.material) continue;
+          mesh.material.depthTest = false;
+          mesh.renderOrder = 4;
+          mesh.material.color.setHex(colorHex);
+          mesh.material.emissive.setHex(colorHex);
+          mesh.material.emissiveIntensity = 0.8;
+          applyOutlineGlow(mesh, colorHex);
+        }
+      }
+
+      if (p.mesh.capeMesh && p.mesh.capeMesh.children.length > 0) {
+        const cape = p.mesh.capeMesh.children[0];
+        if (cape.material) {
+          cape.material.depthTest = false;
+          cape.renderOrder = 5;
+          cape.material.color.setHex(colorHex);
+          cape.material.emissive.setHex(colorHex);
+          cape.material.emissiveIntensity = 0.8;
+          applyOutlineGlow(cape, colorHex);
+        }
+      }
+
+      if (p.mesh.hatMesh && p.mesh.hatMesh.children.length > 0) {
+        for (const mesh of p.mesh.hatMesh.children[0].children) {
+          if (!mesh.material) continue;
+          mesh.material.depthTest = false;
+          mesh.renderOrder = 4;
+          mesh.material.color.setHex(colorHex);
+          mesh.material.emissive.setHex(colorHex);
+          mesh.material.emissiveIntensity = 0.8;
+          applyOutlineGlow(mesh, colorHex);
+        }
+      }
+    } else {
+      if (p.mesh.meshes) {
+        for (const key in p.mesh.meshes) {
+          const mesh = p.mesh.meshes[key];
+          if (!mesh?.material) continue;
+          mesh.material.depthTest = true;
+          mesh.renderOrder = 0;
+          mesh.material.color.setHex(0xffffff);
+          mesh.material.emissive.setHex(0x000000);
+          mesh.material.emissiveIntensity = 0;
+          if (mesh.userData.outlineClone) {
+            mesh.remove(mesh.userData.outlineClone);
+            mesh.userData.outlineClone = null;
+          }
+        }
+      }
+
+      if (p.mesh.armorMesh) {
+        for (const key in p.mesh.armorMesh) {
+          const mesh = p.mesh.armorMesh[key];
+          if (!mesh?.material) continue;
+          mesh.material.depthTest = true;
+          mesh.renderOrder = 0;
+          mesh.material.color.setHex(0xffffff);
+          mesh.material.emissive.setHex(0x000000);
+          mesh.material.emissiveIntensity = 0;
+          if (mesh.userData.outlineClone) {
+            mesh.remove(mesh.userData.outlineClone);
+            mesh.userData.outlineClone = null;
+          }
+        }
+      }
+
+      if (p.mesh.capeMesh && p.mesh.capeMesh.children.length > 0) {
+        const cape = p.mesh.capeMesh.children[0];
+        if (cape.material) {
+          cape.material.depthTest = true;
+          cape.renderOrder = 0;
+          cape.material.color.setHex(0xffffff);
+          cape.material.emissive.setHex(0x000000);
+          cape.material.emissiveIntensity = 0;
+        }
+        if (cape.userData.outlineClone) {
+          cape.remove(cape.userData.outlineClone);
+          cape.userData.outlineClone = null;
+        }
+      }
+
+      if (p.mesh.hatMesh && p.mesh.hatMesh.children.length > 0) {
+        for (const mesh of p.mesh.hatMesh.children[0].children) {
+          if (!mesh.material) continue;
+          mesh.material.depthTest = true;
+          mesh.renderOrder = 0;
+          mesh.material.color.setHex(0xffffff);
+          mesh.material.emissive.setHex(0x000000);
+          mesh.material.emissiveIntensity = 0;
+          if (mesh.userData.outlineClone) {
+            mesh.remove(mesh.userData.outlineClone);
+            mesh.userData.outlineClone = null;
+          }
+        }
+      }
+    }
+  }
+`);
 	// SKIN
 	addModification('ClientSocket.on("CPacketSpawnPlayer",h=>{const p=m.world.getPlayerById(h.id);', `
 		if (h.socketId === player.socketId && enabledModules["AntiBan"]) {
@@ -447,7 +677,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 		if (u == "GrandDad") {
 			const $ = skins[u];
 			return new Promise((et, tt) => {
-				textureManager.loader.load("${corsMoment("https://codeberg.org/RealPacket/VapeForMiniblox/raw/branch/main/assets/skin.png")}", rt => {
+				textureManager.loader.load("${corsMoment("https://codeberg.org/ee6-lang/MinibloxV4/raw/branch/main/assets/skin.png")}", rt => {
 					const nt = {
 						atlas: rt,
 						id: u,
@@ -482,8 +712,24 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 		}
 	`);
 
-	// LOGIN BYPASS
-	addModification('new SPacketLoginStart({requestedUuid:localStorage.getItem(REQUESTED_UUID_KEY)??void 0,session:localStorage.getItem(SESSION_TOKEN_KEY)??"",hydration:localStorage.getItem("hydration")??"0",metricsId:localStorage.getItem("metrics_id")??"",clientVersion:VERSION$1})', 'new SPacketLoginStart({requestedUuid:void 0,session:(enabledModules["AntiBan"] ? "" : (localStorage.getItem(SESSION_TOKEN_KEY) ?? "")),hydration:"0",metricsId:uuid$1(),clientVersion:VERSION$1})', true);
+    // LOGIN BYPASS
+    addModification(
+  'new SPacketLoginStart({ ' +
+    'requestedUuid: localStorage.getItem(REQUESTED_UUID_KEY) ?? void 0, ' +
+    'session: localStorage.getItem(SESSION_TOKEN_KEY) ?? "", ' +
+    'hydration: localStorage.getItem("hydration") ?? "0", ' +
+    'metricsId: localStorage.getItem("metrics_id") ?? "", ' +
+    'clientVersion: VERSION$1 ' +
+  '})',
+  'new SPacketLoginStart({ ' +
+    'requestedUuid: void 0, ' +
+    'session: enabledModules["AntiBan"] ? "" : (localStorage.getItem(SESSION_TOKEN_KEY) ?? ""), ' +
+    'hydration: "0", ' +
+    'metricsId: uuid$1(), ' +
+    'clientVersion: VERSION$1 ' +
+  '})',
+  true
+);
 
 	// KEY FIX
 	addModification('Object.assign(keyMap,u)', '; keyMap["Semicolon"] = "semicolon"; keyMap["Apostrophe"] = "apostrophe";');
@@ -604,10 +850,10 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 				}
 				return this.closeInput();
 		}
-		if (enabledModules["FilterBypass"] && !this.inputValue.startsWith('/')) {
+		if (enabledModules["FilterBypass"] && !this.isInputCommandMode) {
 			const words = this.inputValue.split(" ");
 			let newwords = [];
-			for(const word of words) newwords.push(word.charAt(0) + '‎' + word.slice(1));
+			for(const word of words) newwords.push(word.charAt(0) + '\\\\' + word.slice(1));
 			this.inputValue = newwords.join(' ');
 		}
 	`);
@@ -693,23 +939,17 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 
 			// NoFall
 			new Module("NoFall", function(callback) {
-				if (callback) {
-					let ticks = 0;
-					tickLoop["NoFall"] = function() {
-        				const ray = rayTraceBlocks(player.getEyePos(), player.getEyePos().clone().setY(0), false, false, false, game.world);
-						if (player.fallDistance > 2.5 && ray) {
-							ClientSocket.sendPacket(new SPacketPlayerPosLook({pos: {x: player.pos.x, y: ray.hitVec.y, z: player.pos.z}, onGround: true}));
-							player.fallDistance = 0;
-						}
-					};
+				if (!callback) {
+					delete tickLoop["NoFall"];
+					return;
 				}
-				else delete tickLoop["NoFall"];
+				tickLoop["NoFall"] = function() {
+					if (player.motionY < -0.6 && fallDistance >= 2.5)
+						desync = true;
+				};
 			});
 
-			// WTap
-			new Module("WTap", function() {});
-
-			// AntiVoid
+            // AntiFall
 			new Module("AntiFall", function(callback) {
 				if (callback) {
 					let ticks = 0;
@@ -722,6 +962,9 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 				}
 				else delete tickLoop["AntiFall"];
 			});
+
+			// WTap
+			new Module("WTap", function() {});
 
 			// Killaura
 			let attackDelay = Date.now();
@@ -749,7 +992,6 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 						if ((attackedPlayers[entity.id] || 0) < Date.now()) attackedPlayers[entity.id] = Date.now() + 100;
 						if (!didSwing) {
 							hud3D.swingArm();
-							ClientSocket.sendPacket(new SPacketClick({}));
 							didSwing = true;
 						}
 						const box = entity.getEntityBoundingBox();
@@ -871,11 +1113,11 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 					unblock();
 				}
 			});
-			killaurarange = killaura.addoption("Range", Number, 9);
+			killaurarange = killaura.addoption("Range", Number, 10);
 			killauraangle = killaura.addoption("Angle", Number, 360);
 			killaurablock = killaura.addoption("AutoBlock", Boolean, true);
 			killaurawall = killaura.addoption("Wallcheck", Boolean, false);
-			killaurabox = killaura.addoption("Box", Boolean, true);
+			killaurabox = killaura.addoption("Box", Boolean, false);
 			killauraitem = killaura.addoption("LimitToSword", Boolean, false);
 
 			new Module("FastBreak", function() {});
@@ -892,11 +1134,11 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 				}
 				return new Vector3$1(0, 0, 0);
 			}
-
 			new Module("InvWalk", function() {});
 			new Module("KeepSprint", function() {});
 			new Module("NoSlowdown", function() {});
 			new Module("MusicFix", function() {});
+            new Module("NameTags+", function() {});
 
 			// Speed
 			let speedvalue, speedjump, speedauto;
@@ -915,20 +1157,21 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 				}
 				else delete tickLoop["Speed"];
 			});
-			speedvalue = speed.addoption("Speed", Number, 0.39);
-			speedjump = speed.addoption("JumpHeight", Number, 0.42);
+			speedvalue = speed.addoption("Speed", Number, 0.3);
+			speedjump = speed.addoption("JumpHeight", Number, 0.3);
 			speedauto = speed.addoption("AutoJump", Boolean, true);
 
 			const step = new Module("Step", function() {});
 			stepheight = step.addoption("Height", Number, 2);
 
-			new Module("Chams", function() {});
+			new Module("ESP", function() {});
 			const textgui = new Module("TextGUI", function() {});
-			textguifont = textgui.addoption("Font", String, "Arial");
-			textguisize = textgui.addoption("TextSize", Number, 15);
+			textguifont = textgui.addoption("Font", String, "Poppins");
+			textguisize = textgui.addoption("TextSize", Number, 16);
 			textguishadow = textgui.addoption("Shadow", Boolean, true);
 			textgui.toggle();
 			new Module("AutoRespawn", function() {});
+
 
 			// Breaker
 			let breakerrange;
@@ -1042,7 +1285,7 @@ h.addVelocity(-Math.sin(this.yaw) * g * .5, .1, -Math.cos(this.yaw) * g * .5);
 				else delete tickLoop["AutoCraft"];
 			});
 
-			// ChestSteal OP
+            // ChestSteal OP
 			let cheststealblocks, cheststealtools;
 const cheststeal = new Module("ChestSteal", function(callback) {
     if (callback) {
@@ -1081,8 +1324,7 @@ cheststealblocks = cheststeal.addoption("Blocks", Boolean, true);
 cheststealtools = cheststeal.addoption("Tools", Boolean, true);
 
 
-
-			let scaffoldtower, oldHeld, scaffoldextend, scaffoldcycle;
+            let scaffoldtower, oldHeld, scaffoldextend, scaffoldcycle;
 let tickCount = 0;
 
 function getPossibleSides(pos) {
@@ -1102,11 +1344,16 @@ function switchSlot(slot) {
     game.info.selectedSlot = slot;
 }
 
-const scaffold = new Module("EScaffold", function(callback) {
+const scaffold = new Module("Scaffold", function(callback) {
     if (callback) {
         if (player) oldHeld = game.info.selectedSlot;
 
-        tickLoop["EScaffold"] = function() {
+        game.chat.addChat({
+    text: "Scaffold Destroyer!",
+    color: "gold"
+});
+
+        tickLoop["Scaffold"] = function() {
             tickCount++;
 
             // 🔁 Auto-select blocks & cycle between them
@@ -1268,13 +1515,14 @@ const scaffold = new Module("EScaffold", function(callback) {
         if (player && oldHeld !== undefined) {
             switchSlot(oldHeld);
         }
-        delete tickLoop["EScaffold"];
+        delete tickLoop["Scaffold"];
     }
 });
 
 scaffoldtower = scaffold.addoption("Tower", Boolean, true);
 scaffoldextend = scaffold.addoption("Extend", Number, 1);
 scaffoldcycle = scaffold.addoption("CycleSpeed", Number, 10);
+
 
 			let timervalue;
 			const timer = new Module("Timer", function(callback) {
@@ -1288,105 +1536,127 @@ scaffoldcycle = scaffold.addoption("CycleSpeed", Number, 10);
 			new Module("AutoRejoin", function() {});
 			new Module("AutoQueue", function() {});
 			new Module("AutoVote", function() {});
-			const chatdisabler = new Module("ChatDisabler", function() {});
-			chatdisablermsg = chatdisabler.addoption("Message", String, "youtube.com/c/7GrandDadVape");
+            const chatdisabler = new Module("ChatDisabler", function() {});
+			chatdisablermsg = chatdisabler.addoption("Message", String, "usingAtmosphere3@v6");
 			new Module("FilterBypass", function() {});
 
-			const survival = new Module("SurvivalMode", function(callback) {
-				if (callback) {
-					if (player) player.setGamemode(GameMode.fromId("survival"));
-					survival.toggle();
-				}
-			});
-
-			function dropSlot(index) {
-	playerControllerDump.windowClickDump(player.openContainer.windowId, index, 0, 0, player);
-	playerControllerDump.windowClickDump(player.openContainer.windowId, -999, 0, 0, player);
-}
-
-const InvCleaner = new Module("InvCleaner", function (callback) {
+            const InvCleaner = new Module("InvCleaner", function (callback) {
     if (!callback) {
         delete tickLoop["InvCleaner"];
         return;
     }
 
-    const bestArmor = {};
+    const armorPriority = ["leather", "chain", "iron", "diamond"];
     const weaponClasses = new Set(["ItemSword", "ItemAxe", "ItemBow", "ItemPickaxe"]);
-    const essentialsKeywords = ["gapple", "golden apple", "ender pearl", "fire charge"];
-    const armorMaterialPriority = ["leather", "chain", "iron", "diamond"];
-    const customArmorKeepList = ["god helmet", "legend boots"];
+    const essentials = ["gapple", "golden apple", "ender pearl", "fire charge"];
+    const customKeep = ["god helmet", "legend boots"];
+    const bestArmor = {};
+    const bestItems = {};
     let lastRun = 0;
 
     function getArmorScore(stack) {
         const item = stack.getItem();
-        const material = item.getArmorMaterial?.()?.toLowerCase?.() || "unknown";
-        const materialIndex = armorMaterialPriority.indexOf(material);
-        const materialScore = materialIndex === -1 ? -999 : materialIndex * 1000;
-        const durabilityScore = stack.getMaxDamage() - stack.getItemDamage();
-        return materialScore + durabilityScore;
+        const material = item.getArmorMaterial?.()?.toLowerCase?.() ?? "unknown";
+        const priority = armorPriority.indexOf(material);
+        const durability = stack.getMaxDamage() - stack.getItemDamage();
+        return (priority === -1 ? -999 : priority * 1000) + durability;
+    }
+
+    function getMaterialScore(name) {
+        name = name.toLowerCase();
+        if (name.includes("diamond")) return 4;
+        if (name.includes("iron")) return 3;
+        if (name.includes("chain")) return 2;
+        if (name.includes("wood")) return 1;
+        return 0;
+    }
+
+    function getScore(stack, item) {
+        const damage = item.getDamageVsEntity?.() ?? 0;
+        const enchants = stack.getEnchantmentTagList()?.length ?? 0;
+        const material = getMaterialScore(stack.getDisplayName());
+        return damage + enchants * 1.5 + material * 0.5;
+    }
+
+    function isSameItem(a, b) {
+        if (!a || !b) return false;
+        const nameA = a.stack.getDisplayName()?.toLowerCase();
+        const nameB = b.stack.getDisplayName()?.toLowerCase();
+        const enchA = a.stack.getEnchantmentTagList()?.toString();
+        const enchB = b.stack.getEnchantmentTagList()?.toString();
+        return nameA === nameB && enchA === enchB;
+    }
+
+    function shouldKeep(stack) {
+        const name = stack.getDisplayName().toLowerCase();
+        return essentials.some(k => name.includes(k)) || customKeep.some(k => name.includes(k));
     }
 
     tickLoop["InvCleaner"] = function () {
         const now = Date.now();
-        if (now - lastRun < 45) return;
+        if (now - lastRun < 100) return;
         lastRun = now;
 
-        const keptTypes = new Set();
-        const toDrop = [];
-
-        if (!player.openContainer || player.openContainer !== player.inventoryContainer) return;
-        const slots = player.inventoryContainer.inventorySlots;
-        if (!slots || slots.length < 36) return;
+        const slots = player?.inventoryContainer?.inventorySlots;
+        if (!player.openContainer || player.openContainer !== player.inventoryContainer || !slots || slots.length < 36) return;
 
         Object.keys(bestArmor).forEach(k => delete bestArmor[k]);
+        Object.keys(bestItems).forEach(k => delete bestItems[k]);
 
+        const toDrop = [];
+
+        // Preload equipped armor
         [5, 6, 7, 8].forEach(i => {
-            const slot = slots[i];
-            if (!slot?.getHasStack()) return;
-            const stack = slot.getStack();
-            if (!(stack.getItem() instanceof ItemArmor)) return;
-            const armorType = stack.getItem().armorType ?? "unknown";
-            bestArmor["armor_" + armorType] = { stack, index: i };
+            const stack = slots[i]?.getStack();
+            if (stack?.getItem() instanceof ItemArmor) {
+                const armorType = stack.getItem().armorType ?? "unknown";
+                bestArmor["armor_" + armorType] = { stack, index: i };
+            }
         });
 
         for (let i = 0; i < 36; i++) {
-            const slot = slots[i];
-            if (!slot?.getHasStack()) continue;
+            const stack = slots[i]?.getStack();
+            if (!stack) continue;
 
-            const stack = slot.getStack();
             const item = stack.getItem();
-            const name = stack.getDisplayName().toLowerCase();
+            const className = item.constructor.name;
 
-            if (essentialsKeywords.some(k => name.includes(k))) continue;
-            if (customArmorKeepList.some(k => name.includes(k))) continue;
+            if (shouldKeep(stack)) continue;
 
             if (item instanceof ItemBlock) {
-                if (stack.stackSize < 5) {
-                    toDrop.push(i);
-                }
+                if (stack.stackSize < 5) toDrop.push(i);
                 continue;
             }
 
             if (item instanceof ItemArmor) {
-                const armorType = item.armorType ?? "unknown";
-                const key = "armor_" + armorType;
-                const score = getArmorScore(stack);
-                const existing = bestArmor[key];
-                const existingScore = existing ? getArmorScore(existing.stack) : -1;
+    const armorType = item.armorType ?? "unknown";
+    const key = "armor_" + armorType;
+    const score = getArmorScore(stack);
+    const existing = bestArmor[key];
 
-                if (!existing || score > existingScore) {
-                    if (existing && existing.index !== i) toDrop.push(existing.index);
-                    bestArmor[key] = { stack, index: i };
-                } else {
-                    toDrop.push(i);
-                }
-                continue;
-            }
+    if (!existing) {
+        bestArmor[key] = { stack, index: i, score };
+    } else {
+        const existingScore = existing.score;
+        if (score > existingScore) {
+            toDrop.push(existing.index);
+            bestArmor[key] = { stack, index: i, score };
+        } else {
+            toDrop.push(i); // drop lower-score armor
+        }
+    }
+    continue;
+}
 
-            const className = item.constructor.name;
             if (weaponClasses.has(className)) {
-                if (!keptTypes.has(className)) {
-                    keptTypes.add(className);
+                const score = getScore(stack, item);
+                const existing = bestItems[className];
+
+                if (!existing || score > existing.score) {
+                    if (existing && existing.index !== i) toDrop.push(existing.index);
+                    bestItems[className] = { stack, score, index: i };
+                } else if (existing && isSameItem(bestItems[className], { stack })) {
+                    toDrop.push(i); // Drop exact duplicate
                 } else {
                     toDrop.push(i);
                 }
@@ -1401,77 +1671,53 @@ const InvCleaner = new Module("InvCleaner", function (callback) {
 });
 
 function dropSlot(index) {
-    playerControllerDump.windowClickDump(player.openContainer.windowId, index, 0, 0, player);
-    playerControllerDump.windowClickDump(player.openContainer.windowId, -999, 0, 0, player);
+    const windowId = player.openContainer.windowId;
+    playerControllerDump.windowClickDump(windowId, index, 0, 0, player);
+    playerControllerDump.windowClickDump(windowId, -999, 0, 0, player); // drop outside
 }
 
-let funnyMessages = [
-  "Analyzing target... ▒▒▒ complete.",
-  "No soul detected. Protocol: Δ.404",
-  "Signal faded ▸ consciousness terminated.",
-  "Entity response: null / void.",
-  "Exit timestamp: [0xFE4C]",
-  "Scan mismatch ⚠ integrity: zero.",
-  "Neural echo silenced.",
-  "Memory fragment purged ▓▓▓",
-  "Vital sequence collapsed. ✓",
-  "XFA.031 ▸ subject removed",
-  "[CORE] Terminate ➜ ID:X09A",
-  "SEQ#31.x purge executed",
-  "Subject tagged ▸ TRACE-XΔ",
-  "kill.sig(ΔC7-003)",
-  "Encrypted kill fr ▸ φσX",
-  "Exit granted [v3.1.0.alpha]",
-  "NODE[XA7]: corpse logged",
-  "Terminal: Target ID 0x4E erased",
-  "░░System response: SUCCESSFUL PURGE",
-  "Imagine losing in Miniblox... tragic. 😬",
-    "Analyzing corpse... 💉",
-  "No soul detected. ⚠️",
-  "Target integrity: compromised.",
-  "Residual heat signature: null.",
-  "Scanning DNA... mismatch. ❌",
-  "Consciousness expired. 💤",
-  "Signal disconnected.",
-  "Vital signs terminated.",
-  "Syntax error: Humanity not found.",
-  "Skeletal integrity dissolved.",
-  "Neural response: silent.",
-  "Final echo: none.",
-  "Target offline. 💡",
-  "Purification complete. 🔻",
-  "Emotional trace: zeroed.",
-  "Movement signature deleted.",
-  "Memory block corrupted.",
-  "Identity unresolved. 🧠",
-  "Entity tagged: obsolete.",
-   "X0001 eliminated",
-  "XFA204 purged",
-  "Target erased [vX.03]",
-  "Δ protocol complete",
-  "Entity shutdown: SEQ#19",
-  "kill.sig(XFA201)",
-  "Hitt! ▸ 0xA3",
-  "Operation successful [logged#72]",
-  "👁‍🗨 Memory wipe initiated",
-  "Error 47: Subject deleted",
-  "Removed from system root",
-  "Null trace identified ▸ removed",
-  "Purge complete ☑",
-  "Contact terminated (γ.92)",
-  "⚠ Anomaly resolved",
-  "Exit granted — X019C",
-  "✓ Signal matched and dissolved",
-  "Echo silenced [Node.AV7]",
-  "Deleted from grid (ID#E2)",
-  "Signature nullified 🔻",
-  "Node.js booted fr",
-  "Error 1029 you just got shut down"
+            let funnyMessages = [
+"Prediction ACs: great at guessing wrong.",
+"Lag spikes? Blame the AC trying to play psychic.",
+"Jesus walked on water. ACs still trip over puddles.",
+"Walking on air? ACs call it a glitch. We call it precision.",
+"Prediction ACs eat packets. Too bad they choke on velocity.",
+"Gravity’s a suggestion. ACs treat it like gospel.",
+"Scaffold smoother than your AC’s excuses.",
+"Tick-perfect bridging. ACs still counting frames.",
+"Snapped into water? ACs thought you were a fish.",
+"Water-walking? ACs still learning to swim.",
+"Falling? Nah. Just descending with style while ACs panic.",
+"Patch notes say 'fixed.' Reality says 'still broken.'",
+"Bypass? No. ACs just forgot how to detect.",
+"Modules adapt. ACs react — poorly.",
+"Silent movement. Loud AC confusion.",
+"Prediction? Velocity? ACs still buffering.",
+"No permission asked. ACs weren’t invited.",
+"Every module is a flex. ACs just fold.",
+"No config needed. ACs still reading the manual.",
+"Toggle. Deliver. ACs scramble.",
+"ACs don’t detect. They guess and hope.",
+"Unleashed. ACs unleashed their incompetence.",
+"No drama. Just domination.",
+"ACs patch. We evolve.",
+"Cheating? No. Just outperforming your AC’s imagination.",
+"Toggle scaffold. Build legacy. ACs build logs no one reads.",
+"Flinch? ACs do. We don’t.",
+"Modules = superpowers. ACs = kryptonite to themselves.",
+"ACs call it daddy. We call it Tuesday.",
+"Still undetected. Still undefeated. ACs still confused.",
+"Toggle one module. Server cries. ACs sob.",
+"Patch notes scared. ACs terrified.",
+"Your client warned you. ACs didn’t listen.",
+"Smooth as silk. ACs still stuck in sandpaper mode.",
+"using atmosphere3@v6!",
+"Stealth so clean, ACs think it's a ghost."
 ];
 
-const AutoFunnyChat = new Module("AutoFunnyChat", function(callback) {
+const autofunnychat = new Module("autofunnychat", function(callback) {
     if (!callback) {
-        delete tickLoop["AutoFunnyChat"];
+        delete tickLoop["autofunnychat"];
         if (window.__autoFunnyKillMsgListener) {
             ClientSocket.off && ClientSocket.off("CPacketMessage", window.__autoFunnyKillMsgListener);
             window.__autoFunnyKillMsgListener = undefined;
@@ -1480,7 +1726,7 @@ const AutoFunnyChat = new Module("AutoFunnyChat", function(callback) {
     }
     // Periodic random funny message
     let lastSent = 0;
-    tickLoop["AutoFunnyChat"] = function() {
+    tickLoop["autofunnychat"] = function() {
         if (Date.now() - lastSent > 50000) { // Sends every 50 seconds
             const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
             ClientSocket.sendPacket(new SPacketMessage({text: msg}));
@@ -1510,6 +1756,30 @@ const AutoFunnyChat = new Module("AutoFunnyChat", function(callback) {
         ClientSocket.socket.off("CPacketMessage", window.__autoFunnyKillMsgListener);
     }
 });
+
+          // Fly
+			let flyvalue, flyvert, flybypass;
+			const fly = new Module("Fly", function(callback) {
+				if (!callback) {
+					if (player) {
+						player.motion.x = Math.max(Math.min(player.motion.x, 0.3), -0.3);
+						player.motion.z = Math.max(Math.min(player.motion.z, 0.3), -0.3);
+					}
+					delete tickLoop["Fly"];
+					desync = false;
+					return;
+				}
+				desync = true;
+				tickLoop["Fly"] = function() {
+					const dir = getMoveDirection(flyvalue[1]);
+					player.motion.x = dir.x;
+					player.motion.z = dir.z;
+					player.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);
+				};
+			});
+			flybypass = fly.addoption("Bypass", Boolean, true);
+			flyvalue = fly.addoption("Speed", Number, 0.18);
+			flyvert = fly.addoption("Vertical", Number, 0.5);
 
 const spiderclimb = new Module("SpiderClimb", function(callback) {
     if (!callback) {
@@ -1545,10 +1815,10 @@ const spiderclimb = new Module("SpiderClimb", function(callback) {
     };
 });
 
-spiderclimb.addoption("Cling Height", Number, 1.4);
+spiderclimb.addoption("Cling Height", Number, 1.1);
 spiderclimb.addoption("Enable Sneak Climb", Boolean, true);
 spiderclimb.addoption("Allow Air Cling", Boolean, true);
-spiderclimb.addoption("Climb Speed", Number, 0.18);
+spiderclimb.addoption("Climb Speed", Number, 0.32);
 
 const jesus = new Module("Jesus", function(callback) {
     if (callback) {
@@ -1581,12 +1851,56 @@ const jesus = new Module("Jesus", function(callback) {
     }
 });
 
-			globalThis.${storeName}.modules = modules;
+var GhostJoin = new Module("GhostJoin", function(callback) {
+    if (!callback) {
+        delete tickLoop["GhostJoin"];
+        if (window.__ghostJoinLoop) {
+            clearInterval(window.__ghostJoinLoop);
+            window.__ghostJoinLoop = undefined;
+        }
+        return;
+    }
+
+    var fakeNames = [
+        "(99) Vector",         // Owner
+        "(99) Tester",         // Admin
+        "(99) KanusMaximus",   // Admin
+    ];
+    var lastGhost = null;
+
+    if (window.__ghostJoinLoop) {
+        clearInterval(window.__ghostJoinLoop);
+    }
+
+    window.__ghostJoinLoop = setInterval(function() {
+        var name = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+        lastGhost = name;
+
+        game.chat.addChat({
+            text: name + " joined the game",
+            color: "yellow"
+        });
+    }, 10000); // Every 10 seconds
+
+    tickLoop["GhostJoin"] = function() {
+        if (lastGhost) {
+            game.chat.addChat({
+                text: lastGhost + " left the game",
+                color: "yellow"
+            });
+
+            lastGhost = null;
+        }
+    };
+});
+
+
+            globalThis.${storeName}.modules = modules;
 			globalThis.${storeName}.profile = "default";
 		})();
 	`);
 
-	async function saveVapeConfig(profile) {
+async function saveVapeConfig(profile) {
 		if (!loadedConfig) return;
 		let saveList = {};
 		for(const [name, module] of Object.entries(unsafeWindow.globalThis[storeName].modules)) {
@@ -1692,388 +2006,4 @@ const jesus = new Module("Jesus", function(callback) {
 	else {
 		execute(publicUrl);
 	}
-})();
-(async function() {
-  // Load Minecraft font
-  const fontLink = document.createElement("link");
-  fontLink.href = "https://fonts.cdnfonts.com/css/minecraft-4";
-  fontLink.rel = "stylesheet";
-  document.head.appendChild(fontLink);
-
-  // Wait for modules
-  await new Promise(resolve => {
-    const loop = setInterval(() => {
-      if (unsafeWindow.globalThis[storeName]?.modules) {
-        clearInterval(loop);
-        resolve();
-      }
-    }, 10);
-  });
-
-  // Inject GUI
-  injectGUI(unsafeWindow.globalThis[storeName]);
-
-  async function injectGUI(store) {
-    const moduleCategories = {
-      Combat: ["aura", "reach", "velocity", "crit", "hit", "attack"],
-      Movement: ["fly", "speed", "step", "bhop", "sprint"],
-      Render: ["esp", "tracer", "fullbright", "nametag"],
-      Misc: ["autogg", "scaffold", "spammer", "inv", "chest", "timer"]
-    };
-    const categoryIcons = { Combat: "⚔️", Movement: "🏃", Render: "👁️", Misc: "🧰" };
-
-    // Styles including rainbow header & live slider labels
-    const style = document.createElement("style");
-    style.textContent = `
-      @keyframes rainbowText { 0% { background-position: 0% } 100% { background-position: 100% } }
-      #clickGUI { position: fixed; top:100px; left:100px; width:360px; max-height:80vh;
-        overflow-y:auto; background:rgba(15,15,15,0.95); color:white; font-family:monospace;
-        border:2px solid lime; padding:12px; border-radius:8px; z-index:999999; display:none; }
-      #clickGUI h2 { text-align:center; font-size:24px; font-weight:bold;
-        background:linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
-        background-size:1400% 1400%; -webkit-background-clip:text; color:transparent;
-        animation:rainbowText 6s linear infinite; cursor:move; }
-      .module { margin-bottom:10px; padding-bottom:6px; border-bottom:1px dashed #444; }
-      .toggle-btn { float:right; background:lime; color:black; border:none;
-        padding:2px 6px; border-radius:4px; cursor:pointer; font-weight:bold; }
-      .option-line { margin:4px 0; font-size:13px; position:relative; }
-      input[type="range"] { width:calc(100% - 40px); vertical-align:middle; }
-      input[type="text"] { width:100%; font-size:12px; }
-      .live-label { position:absolute; right:0; top:2px; font-size:12px; color:lime; }
-      #guiControls { margin-top:12px; text-align:center; }
-      button.control { background:black; color:lime; border:1px solid lime;
-        padding:5px 8px; margin:2px; cursor:pointer; font-family:monospace; border-radius:4px; }
-    `;
-    document.head.appendChild(style);
-
-    // Notification container
-    const notifWrap = document.createElement("div");
-    notifWrap.style = `
-      position: fixed;
-      bottom: 40px;
-      right: 30px;
-      z-index: 1000000;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      pointer-events: none;
-    `;
-    document.body.appendChild(notifWrap);
-
-    function showNotif(text) {
-  const notif = document.createElement("div");
-  notif.textContent = text;
-  notif.style = `
-    background: rgba(20,20,20,0.96);
-    color: lime;
-    font-family: monospace;
-    font-size: 16px;
-    margin-top: 8px;
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: 2px solid lime;
-    box-shadow: 0 2px 12px #000a;
-    opacity: 1;
-    transition: opacity 0.4s, transform 0.5s cubic-bezier(.23,1.29,.56,1.01);
-    transform: translateX(120%);
-    pointer-events: none;
-  `;
-  notifWrap.appendChild(notif);
-
-  // Start slide-in after appending
-  setTimeout(() => { notif.style.transform = "translateX(0)"; }, 10);
-
-  setTimeout(() => { notif.style.opacity = 0; notif.style.transform = "translateX(120%)"; }, 4800);
-  setTimeout(() => { notif.remove(); }, 5200);
-}
-
-    // Build GUI
-    const gui = document.createElement("div");
-    gui.id = "clickGUI";
-    gui.innerHTML = `<h2 id="clickHeader">Massive GUI</h2>`;
-    document.body.appendChild(gui);
-
-    // Enable dragging
-    let dragging = false, offsetX = 0, offsetY = 0;
-    const header = gui.querySelector("#clickHeader");
-    header.onmousedown = e => {
-      dragging = true;
-      offsetX = e.clientX - gui.offsetLeft;
-      offsetY = e.clientY - gui.offsetTop;
-    };
-    document.onmouseup = () => (dragging = false);
-    document.onmousemove = e => {
-      if (dragging) {
-        gui.style.left = `${e.clientX - offsetX}px`;
-        gui.style.top = `${e.clientY - offsetY}px`;
-      }
-    };
-
-    // Prevent context menu
-    gui.oncontextmenu = e => e.preventDefault();
-
-    // Tabs & search bar
-    const tabWrap = document.createElement("div");
-    tabWrap.style = "display:flex; gap:6px; margin-bottom:10px; justify-content:center;";
-    gui.appendChild(tabWrap);
-
-    const searchBar = document.createElement("input");
-    searchBar.type = "text";
-    searchBar.placeholder = "🔍 Search modules...";
-    searchBar.style = `
-      width:calc(100% - 20px); margin:0 auto 10px; display:block;
-      padding:5px 8px; border:1px solid lime; background:black; color:lime; font-family:monospace;
-    `;
-    gui.appendChild(searchBar);
-
-    const tabModules = {};
-    let currentTab = "Combat";
-    for (const tabName of Object.keys(moduleCategories)) {
-      const btn = document.createElement("button");
-      btn.className = "control";
-      btn.textContent = tabName;
-      btn.onclick = () => switchTab(tabName);
-      tabWrap.appendChild(btn);
-      tabModules[tabName] = [];
-    }
-
-    // Create modules
-    Object.entries(store.modules).forEach(([name, mod]) => {
-      const box = document.createElement("div");
-      box.className = "module";
-
-      // Choose icon
-      let icon = "❓";
-      for (const [cat, keys] of Object.entries(moduleCategories)) {
-        if (keys.some(k => name.toLowerCase().includes(k))) {
-          icon = categoryIcons[cat] || icon;
-          break;
-        }
-      }
-
-      const toggle = document.createElement("button");
-      toggle.className = "toggle-btn";
-      toggle.textContent = mod.enabled ? "ON" : "OFF";
-      toggle.onclick = () => {
-        mod.toggle();
-        toggle.textContent = mod.enabled ? "ON" : "OFF";
-        showNotif(`${name} module has been toggled ${mod.enabled ? "ON" : "OFF"}`);
-      };
-
-      box.innerHTML = `<b>${icon} ${name}</b>`;
-      box.appendChild(toggle);
-
-      if (mod.options) {
-        Object.values(mod.options).forEach(opt => {
-          const [type, val, label] = opt;
-          const line = document.createElement("div");
-          line.className = "option-line";
-          line.innerText = label + ": ";
-
-          if (type === Boolean) {
-            const cb = document.createElement("input");
-            cb.type = "checkbox";
-            cb.checked = val;
-            cb.onchange = () => (opt[1] = cb.checked);
-            line.appendChild(cb);
-          } else if (type === Number) {
-            const slider = document.createElement("input");
-            slider.type = "range";
-            slider.min = 0;
-            slider.max = 10;
-            slider.step = 0.1;
-            slider.value = val;
-
-            const liveLabel = document.createElement("span");
-            liveLabel.className = "live-label";
-            liveLabel.textContent = val;
-
-            slider.oninput = () => {
-              opt[1] = parseFloat(slider.value);
-              liveLabel.textContent = slider.value;
-            };
-
-            line.appendChild(slider);
-            line.appendChild(liveLabel);
-          } else if (type === String) {
-            const input = document.createElement("input");
-            input.type = "text";
-            input.value = val;
-            input.onchange = () => (opt[1] = input.value);
-            line.appendChild(input);
-          }
-          box.appendChild(line);
-        });
-      }
-
-      const bindLine = document.createElement("div");
-      bindLine.className = "option-line";
-      bindLine.innerHTML = `Bind: <input type="text" style="width:60px" value="${mod.bind}">`;
-      bindLine.querySelector("input").onchange = e => mod.setbind(e.target.value);
-      box.appendChild(bindLine);
-
-      let cat = "Misc";
-      for (const [k, keys] of Object.entries(moduleCategories)) {
-        if (keys.some(x => name.toLowerCase().includes(x))) {
-          cat = k;
-          break;
-        }
-      }
-      tabModules[cat].push(box);
-      box.style.display = cat === currentTab ? "block" : "none";
-      gui.appendChild(box);
-    });
-
-    function switchTab(tab) {
-      currentTab = tab;
-      const q = searchBar.value.toLowerCase();
-      Object.entries(tabModules).forEach(([cat, boxes]) => {
-        boxes.forEach(b => {
-          const nm = b.querySelector("b").textContent.toLowerCase();
-          b.style.display = cat === tab && (nm.includes(q) || q.split("").every(ch => nm.includes(ch)))
-            ? "block" : "none";
-        });
-      });
-    }
-    searchBar.addEventListener("input", () => switchTab(currentTab));
-
-    // Control buttons, themes & profiles
-    const ctrl = document.createElement("div");
-    ctrl.id = "guiControls";
-    gui.appendChild(ctrl);
-
-    const themes = ["dark", "minecraft", "neon", "glass", "frame", "sunset", "ocean", "chrome", "terminal"];
-    let themeIndex = themes.indexOf(await GM_getValue("guiTheme", "dark"));
-
-    const themeBtn = document.createElement("button");
-    themeBtn.className = "control";
-    themeBtn.textContent = "Toggle Theme";
-    themeBtn.onclick = () => {
-      themeIndex = (themeIndex + 1) % themes.length;
-      GM_setValue("guiTheme", themes[themeIndex]);
-      applyTheme(themes[themeIndex]);
-    };
-    ctrl.appendChild(themeBtn);
-
-    const exportBtn = document.createElement("button");
-    exportBtn.className = "control";
-    exportBtn.textContent = "Export";
-    exportBtn.onclick = () => {
-      const prof = store.profile;
-      const cfg = GM_getValue("vapeConfig" + prof, "{}");
-      navigator.clipboard.writeText(cfg).then(() => alert("✅ Exported"));
-    };
-    ctrl.appendChild(exportBtn);
-
-    const importBtn = document.createElement("button");
-    importBtn.className = "control";
-    importBtn.textContent = "Import";
-    importBtn.onclick = async () => {
-      const prof = store.profile;
-      const txt = await navigator.clipboard.readText();
-      if (txt) {
-        await GM_setValue("vapeConfig" + prof, txt);
-        await store.loadVapeConfig(prof);
-        alert("✅ Imported");
-      } else {
-        alert("❌ Clipboard empty");
-      }
-    };
-    ctrl.appendChild(importBtn);
-
-    const saveBtn = document.createElement("button");
-    saveBtn.className = "control";
-    saveBtn.textContent = "Save";
-    saveBtn.onclick = () => store.saveVapeConfig();
-    ctrl.appendChild(saveBtn);
-
-    const loadBtn = document.createElement("button");
-    loadBtn.className = "control";
-    loadBtn.textContent = "Load";
-    loadBtn.onclick = () => store.loadVapeConfig();
-    ctrl.appendChild(loadBtn);
-
-    applyTheme(themes[themeIndex]);
-
-    // Theme application logic
-    function applyTheme(m) {
-      const root = document.getElementById("clickGUI");
-      const buttons = root.querySelectorAll("button");
-      // Reset styles
-      root.style.backdropFilter = root.style.background = root.style.border = root.style.color = "";
-      buttons.forEach(b => b.style.background = b.style.color = b.style.border = "");
-
-      const setBtn = (bg, clr, border) => buttons.forEach(b => { b.style.background = bg; b.style.color = clr; b.style.border = border; });
-
-      switch (m) {
-        case "dark":
-          root.style.background = "rgba(15,15,15,0.95)";
-          root.style.color = "#fff";
-          root.style.border = "2px solid lime";
-          setBtn("black", "lime", "1px solid lime");
-          break;
-        case "minecraft":
-          root.style.background = 'url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets/assets/minecraft/textures/block/stone.png") repeat';
-          root.style.backgroundSize = "64px 64px";
-          root.style.imageRendering = "pixelated";
-          root.style.color = "#0f0";
-          root.style.fontFamily = '"Minecraft", monospace';
-          root.style.border = "3px double #0f0";
-          setBtn("#1a1a1a", "#0f0", "1px solid #0f0");
-          break;
-        case "neon":
-          root.style.background = "#000";
-          root.style.color = "#0ff";
-          root.style.border = "2px solid #0ff";
-          setBtn("#111", "#0ff", "1px solid #0ff");
-          break;
-        case "glass":
-          root.style.background = "rgba(255,255,255,0.08)";
-          root.style.color = "#fff";
-          root.style.backdropFilter = "blur(10px)";
-          root.style.border = "1px solid rgba(255,255,255,0.2)";
-          setBtn("rgba(255,255,255,0.15)", "#fff", "1px solid rgba(255,255,255,0.3)");
-          break;
-        case "frame":
-          root.style.background = "#ddd";
-          root.style.color = "#111";
-          root.style.border = "2px solid #444";
-          setBtn("#eee", "#111", "1px solid #888");
-          break;
-        case "sunset":
-          root.style.background = "linear-gradient(135deg,#ff5f6d,#ffc371)";
-          root.style.color = "#fff";
-          root.style.border = "2px solid #ffb347";
-          setBtn("#ff7e5f", "#fff", "1px solid #fff");
-          break;
-        case "ocean":
-          root.style.background = "linear-gradient(135deg,#2b5876,#4e4376)";
-          root.style.color = "#ccf";
-          root.style.border = "2px solid #88f";
-          setBtn("#334", "#ccf", "1px solid #ccf");
-          break;
-        case "chrome":
-          root.style.background = "#dfe4ea";
-          root.style.color = "#2f3542";
-          root.style.border = "2px solid #57606f";
-          setBtn("#f1f2f6", "#2f3542", "1px solid #57606f");
-          break;
-        case "terminal":
-          root.style.background = "#000";
-          root.style.color = "#0f0";
-          root.style.border = "2px solid #0f0";
-          setBtn("#000", "#0f0", "1px solid #0f0");
-          break;
-      }
-    }
-
-    // Toggle visibility with Backslash (\\)
-    let visible = false;
-    document.addEventListener("keydown", e => {
-      if (e.code === "Backslash") {
-        visible = !visible;
-        gui.style.display = visible ? "block" : "none";
-      }
-    });
-  }
 })();

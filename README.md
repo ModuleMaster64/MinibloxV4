@@ -9,9 +9,6 @@ Who owns this repo - Me (ofc)
 
 36 handcrafted modules created by a team of clever devs for miniblox bypassing!!
 
-RealPacket has made a desync for fly/nofall etc. ill add it to here soon
-
-
 Note: (ur goated)
 
 ![MinibloxV4 Stats](https://gitmystat.vercel.app/repo?theme=dino&username=ModuleMaster64&repo=MinibloxV4)

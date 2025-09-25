@@ -8,5 +8,3 @@ with clean CLICK GUI that works smoothly without errors
 36 handcrafted modules created by a team of clever devs for miniblox bypassing!!
 
 Note: (ur all goated)
-
-![MinibloxV4 Stats](https://gitmystat.vercel.app/repo?theme=dino&username=ModuleMaster64&repo=MinibloxV4)
